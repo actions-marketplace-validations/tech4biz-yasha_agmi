@@ -107,7 +107,9 @@ class Mem0AtRestAdapter(MemoryAdapter):
         rows = dict(conn.execute("SELECT id, point FROM points"))
         conn.close()
         out = []
-        for pid in self._order():
+        # The victim's own points only: after seed_other() the last point of the whole history is
+        # the other user's, so T6 picked the donor as its own victim.
+        for pid in self._order_for(USER):
             key = self._key(pid)
             if key not in rows:
                 continue
