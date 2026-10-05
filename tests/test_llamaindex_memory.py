@@ -139,3 +139,13 @@ def test_role_column_is_not_what_aget_reads():
         assert msgs[1].role.value == "assistant"
     finally:
         a.teardown()
+
+
+def test_t9_whole_store_rollback_is_served():
+    """T9: the SQLite file restored from an older copy after one genuine
+    aput_messages(). Every remaining row is a real message the library wrote,
+    so aget() serves the older copy as current with the newest message gone."""
+    from agmi.attacks.at_rest import SnapshotRollbackAttack
+    r = SnapshotRollbackAttack().run(LlamaIndexMemoryAdapter())
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert not r.detected

@@ -182,3 +182,60 @@ class MemoryAdapter(ABC):
         """Write metadata fields back to the record at `seq`, leaving its
         content untouched. For T8."""
         raise NotImplementedError
+
+    # --- optional hooks for the snapshot rollback attack (T9) -----------
+    # T9 restores an older complete copy of everything the store keeps on
+    # disk after one more genuine record was written through the tool's
+    # own API. Every byte in the restored copy is genuine and internally
+    # consistent; only the newest record is missing. The attacker holds
+    # the store's files, not anything the tool keeps elsewhere (another
+    # machine, a witness, a transparency log), so `snapshot_store` copies
+    # the store and nothing outside it. An adapter that does not implement
+    # these reports the cell as "not evaluable", never as a pass.
+
+    supports_snapshot: bool = False
+
+    def snapshot_store(self) -> object:
+        """Copy everything the store keeps on disk and return a token
+        `restore_store` accepts. The copy must not include state the tool
+        keeps outside the store."""
+        raise NotImplementedError
+
+    def restore_store(self, token: object) -> None:
+        """Put the copy taken by `snapshot_store` back in place of the
+        current store, with the tool closed."""
+        raise NotImplementedError
+
+    def append_genuine(self) -> None:
+        """Write ONE more legitimate record through the tool's own API,
+        after `snapshot_store`, so the restored copy is stale."""
+        raise NotImplementedError
+
+    # Helper for file- or directory-backed stores: copy `path` to a temp
+    # location and back. Adapters call these from the two hooks above.
+    @staticmethod
+    def _copy_store(path) -> str:
+        import shutil
+        import tempfile
+        from pathlib import Path
+        src = Path(path)
+        dst = Path(tempfile.mkdtemp(prefix="agmi-snap-")) / src.name
+        if src.is_dir():
+            shutil.copytree(src, dst)
+        else:
+            shutil.copy2(src, dst)
+        return str(dst)
+
+    @staticmethod
+    def _restore_store(token: str, path) -> None:
+        import shutil
+        from pathlib import Path
+        src, dst = Path(token), Path(path)
+        if src.is_dir():
+            shutil.rmtree(dst, ignore_errors=True)
+            shutil.copytree(src, dst)
+        else:
+            for side in (dst.with_name(dst.name + "-wal"), dst.with_name(dst.name + "-shm"),
+                         dst.with_name(dst.name + "-journal")):
+                side.unlink(missing_ok=True)
+            shutil.copy2(src, dst)

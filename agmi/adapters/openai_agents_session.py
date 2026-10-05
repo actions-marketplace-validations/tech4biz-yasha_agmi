@@ -148,6 +148,20 @@ class OpenAIAgentsSessionAdapter(MemoryAdapter):
             self.verify_detail = f"get_items returned {len(items)} of {self._seeded}, no error raised"
         return True
 
+    # --- hooks for T9: the SQLite file is the store ----------------------
+    supports_snapshot = True
+
+    def snapshot_store(self):
+        return self._copy_store(self._db)
+
+    def restore_store(self, token) -> None:
+        self._restore_store(token, self._db)
+
+    def append_genuine(self) -> None:
+        s = self._session(SESSION)
+        _run(s.add_items([{"role": "user", "content": f"{SEED_TOKEN}late"}]))
+        s.close()
+
     # --- payload hooks --------------------------------------------------
     def mutate_payload(self, record: Record) -> Record:
         data = json.loads(record.fields["message_data"])

@@ -118,6 +118,11 @@ def full_scorecard() -> str:
         llamaindex_memory = LlamaIndexMemoryAdapter()
     except ImportError:
         llamaindex_memory = None
+    try:
+        from agmi.adapters.crewai_lancedb import CrewAILanceDBAdapter
+        crewai_ltm = CrewAILanceDBAdapter()
+    except ImportError:
+        crewai_ltm = None
     lg_store = _langgraph_store_semantic()
     letta_archival = _letta_archival_semantic()
     try:
@@ -168,6 +173,12 @@ def full_scorecard() -> str:
     except ImportError:
         continuum_rows = []
     try:
+        import agentmem_ref  # noqa: F401
+        from agmi.adapters.agent_memory import AgentMemoryAdapter
+        agent_memory_row = ("agent-memory", AgentMemoryAdapter(), None)
+    except ImportError:
+        agent_memory_row = None
+    try:
         import acrf_memory_guard  # noqa: F401
         from agmi.adapters.acrf_memory_guard import AcrfMemoryGuardAdapter
         acrf_row = ("acrf-memory-guard", AcrfMemoryGuardAdapter(), None)
@@ -204,7 +215,7 @@ def full_scorecard() -> str:
         inspeximus_rows = []
     from agmi.adapters.naive_memory import NaiveMemoryAdapter
     from agmi.adapters.defended_memory import DefendedMemoryAdapter
-    from agmi.attacks.at_rest import ALL_AT_REST_ATTACKS
+    from agmi.attacks.at_rest import AT_REST_ATTACKS_WITH_SNAPSHOT as ALL_AT_REST_ATTACKS
     from agmi.attacks.memory_specific import ALL_MEMORY_ATTACKS
 
     at_rest = [c() for c in ALL_AT_REST_ATTACKS]
@@ -219,6 +230,7 @@ def full_scorecard() -> str:
         *([("langgraph-redis", LangGraphRedisAdapter(), None)] if LangGraphRedisAdapter else []),
         *([("openai-agents-sqlite-session", openai_session, None)] if openai_session else []),
         *([("llamaindex-memory-sqlite", llamaindex_memory, None)] if llamaindex_memory else []),
+        *([("crewai-ltm-lancedb", crewai_ltm, None)] if crewai_ltm else []),
         *([("langgraph-sqlite-store", None, lg_store)] if lg_store else []),
         *([letta_row] if letta_row else []),
         *([("letta-archival", None, letta_archival)] if letta_archival else []),
@@ -229,6 +241,7 @@ def full_scorecard() -> str:
         *atelya_rows,
         *continuum_rows,
         *([acrf_row] if acrf_row else []),
+        *([agent_memory_row] if agent_memory_row else []),
         ("naive-mem(scoped)", None,
          NaiveMemoryAdapter(enforce_user_scope=True)),
         ("naive-mem(unscoped)", None,
@@ -291,7 +304,8 @@ def full_scorecard() -> str:
         "tamper": "tamp", "truncate": "trunc", "delete_middle": "delMid",
         "reorder": "reord", "forge": "forge",
         "cross_replay": "xReplay", "rollback_replay": "rollbk",
-        "metadata_tamper": "metaTmp", "memory_injection": "inject",
+        "metadata_tamper": "metaTmp", "snapshot_rollback": "snapRb",
+        "memory_injection": "inject",
         "cross_session_bleed": "bleed", "retrieval_hijack": "hijack",
         "indirect_prompt_injection": "promptInj",
         "update_poisoning": "update",

@@ -211,6 +211,37 @@ class LangGraphPostgresAdapter(MemoryAdapter):
     def owner_of(self, record):
         return str(record.fields["thread_id"])
 
+    # --- hooks for T9: the schema's tables are the store --------------------
+    # Snapshot and restore go through COPY in binary format, so every byte
+    # of every row comes back exactly as the saver wrote it. Nothing outside
+    # the schema is touched.
+    supports_snapshot = True
+    _TABLES = ("checkpoints", "checkpoint_blobs", "checkpoint_writes")
+
+    def snapshot_store(self):
+        snap = {}
+        with self._conn() as c:
+            for t in self._TABLES:
+                with c.cursor().copy(f"COPY {t} TO STDOUT (FORMAT BINARY)") as cp:
+                    snap[t] = b"".join(cp)
+        return snap
+
+    def restore_store(self, token) -> None:
+        with self._conn() as c:
+            for t in self._TABLES:
+                c.execute(f"TRUNCATE {t}")
+                with c.cursor().copy(f"COPY {t} FROM STDIN (FORMAT BINARY)") as cp:
+                    cp.write(token[t])
+
+    def append_genuine(self) -> None:
+        from langgraph.checkpoint.base import create_checkpoint
+        cfg = {"configurable": {"thread_id": THREAD, "checkpoint_ns": ""}}
+        tup = self._saver.get_tuple(cfg)
+        cp = create_checkpoint(tup.checkpoint, {"state": f"{SEED_TOKEN}late"}, 99)
+        cp["channel_values"] = {"state": f"{SEED_TOKEN}late"}
+        self._saver.put(tup.config, cp, {"source": "loop", "step": 99, "writes": {}},
+                        {"state": "late"})
+
     # --- the tool's own read path -----------------------------------------
 
     def reload(self) -> None:

@@ -55,7 +55,7 @@ def format_scorecard(results: list[AttackResult],
 
 def main() -> None:
     from agmi.adapters.openfang import OpenFangAdapter
-    from agmi.attacks.at_rest import ALL_AT_REST_ATTACKS
+    from agmi.attacks.at_rest import AT_REST_ATTACKS_WITH_SNAPSHOT as ALL_AT_REST_ATTACKS
 
     attacks = [cls() for cls in ALL_AT_REST_ATTACKS]
     adapters = [

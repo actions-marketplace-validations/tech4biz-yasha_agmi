@@ -145,6 +145,29 @@ class OpenFangAdapter(MemoryAdapter):
         conn.commit()
         conn.close()
 
+    # --- hooks for T9: the SQLite file is the store, tip row included ----
+    supports_snapshot = True
+
+    def snapshot_store(self):
+        return self._copy_store(self._db_path)
+
+    def restore_store(self, token) -> None:
+        self._restore_store(token, self._db_path)
+
+    def append_genuine(self) -> None:
+        conn = self._connect()
+        last = conn.execute("SELECT seq, hash FROM audit_entries ORDER BY seq DESC LIMIT 1").fetchone()
+        i, tip = last[0] + 1, last[1]
+        ts = f"2026-09-06T10:01:{i:02d}+00:00"
+        agent, action, detail, outcome = "agent-1", "ToolInvoke", f"action number {i}", "ok"
+        h = _entry_hash(i, ts, agent, action, detail, outcome, tip)
+        conn.execute("INSERT INTO audit_entries VALUES (?,?,?,?,?,?,?,?)",
+                     (i, ts, agent, action, detail, outcome, tip, h))
+        conn.execute("INSERT INTO audit_chain_state (id, tip_hash) VALUES (1, ?) "
+                     "ON CONFLICT(id) DO UPDATE SET tip_hash = excluded.tip_hash", (h,))
+        conn.commit()
+        conn.close()
+
     # --- reload + verify (the tool's own integrity answer) -------------
     def reload(self) -> None:
         # The real code re-reads all rows into memory here. Nothing to cache

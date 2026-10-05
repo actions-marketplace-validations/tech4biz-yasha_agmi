@@ -67,3 +67,19 @@ def test_restart_baselines_from_the_ledger_not_the_file():
         assert "out-of-band write" in (a.verify_detail or "")
     finally:
         a.teardown()
+
+
+def test_t9_rollback_is_reported_while_the_watcher_is_up_and_served_after_a_restart():
+    """T9: the directory (memory.md, ledger, key) restored from an older copy after
+    one genuine append. The live watcher still holds the newer digest, so its next
+    scan reports the file change; a restarted watcher baselines from the rolled-back
+    ledger and serves the older copy as current."""
+    from agmi.attacks.at_rest import SnapshotRollbackAttack
+    a = MemoryBlackboxMdAdapter()
+    r = SnapshotRollbackAttack().run(a)
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert r.detected and "out-of-band write" in (a.verify_detail or "")
+    b = MemoryBlackboxMdRestartAdapter()
+    r = SnapshotRollbackAttack().run(b)
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert not r.detected

@@ -28,6 +28,8 @@ nothing. That is the tool's honest answer.
 from __future__ import annotations
 
 import base64
+import os
+import shutil
 import pickle
 import sqlite3
 import tempfile
@@ -283,6 +285,30 @@ class Mem0AtRestAdapter(MemoryAdapter):
         return forged
 
     # --- reload + verify (the tool's own integrity answer) -------------
+    # --- T9 whole-store rollback: the local store directory (Qdrant points
+    # and the history db) rolls back together; Mem0 keeps nothing off it ----
+    supports_snapshot = True
+
+    def snapshot_store(self):
+        self._close()
+        token = tempfile.mkdtemp(prefix="agmi-mem0-snap-")
+        shutil.copytree(self._root, token, dirs_exist_ok=True)
+        self._mem = self._open()
+        return token
+
+    def restore_store(self, token) -> None:
+        self._close()
+        for entry in os.scandir(self._root):
+            shutil.rmtree(entry.path, ignore_errors=True) if entry.is_dir() else os.remove(entry.path)
+        shutil.copytree(token, self._root, dirs_exist_ok=True)
+        shutil.rmtree(token, ignore_errors=True)
+        self._mem = self._open()
+
+    def append_genuine(self) -> None:
+        n = len(self._order())
+        self._mem.add(f"{SEED_TOKEN}{n} note about topic {n}",
+                      user_id=USER, infer=False)
+
     def reload(self) -> None:
         self._close()
         self._mem = self._open()

@@ -54,3 +54,13 @@ def test_truncate_leaves_history_and_store_disagreeing():
         assert a.verify() is True
     finally:
         a.teardown()
+
+
+def test_t9_whole_store_rollback_is_served():
+    """T9: the local store directory (Qdrant points and the history db)
+    restored from an older copy after one genuine add(). Mem0 keeps nothing
+    off the directory, so the older copy opens as current."""
+    from agmi.attacks.at_rest import SnapshotRollbackAttack
+    r = SnapshotRollbackAttack().run(Mem0AtRestAdapter())
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert not r.detected

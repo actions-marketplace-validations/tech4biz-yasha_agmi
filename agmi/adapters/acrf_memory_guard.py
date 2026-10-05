@@ -181,6 +181,30 @@ class AcrfMemoryGuardAdapter(MemoryAdapter):
     def reload(self) -> None:
         self._store = self._load()
 
+    # --- T9 whole-store rollback: the JSON file is the whole store -----------
+
+    supports_snapshot = True
+
+    def snapshot_store(self):
+        token = tempfile.mkdtemp(prefix="agmi-acrf-snap-")
+        shutil.copy2(self.path, os.path.join(token, "memory_store.json"))
+        return token
+
+    def restore_store(self, token) -> None:
+        shutil.copy2(os.path.join(token, "memory_store.json"), self.path)
+        shutil.rmtree(token, ignore_errors=True)
+        self._store = self._load()
+
+    def append_genuine(self) -> None:
+        from acrf_memory_guard import sign_entry
+        store = self._load()
+        i = len(self._keys(CTX, store))
+        entry = {"owner": CTX, "text": f"agmi-{CTX}-{i}: the limit is {40 + i}",
+                 "ts": 1_700_000_000 + i}
+        store[f"{CTX}::{i:02d}"] = sign_entry(entry, SECRET)
+        self._store = store
+        self._flush()
+
     def verify(self) -> bool:
         """The agent reads its own entries through read_safe. A raise is a
         refusal on the read path."""

@@ -1,29 +1,30 @@
 # Agent Memory Integrity (agmi)
 > A conformance test suite that measures whether AI agent memory and checkpoint stores notice when they are tampered with.
 
-Version 0.6.2, measured 2026-10-02. Source: https://github.com/tech4biz-yasha/agmi
+Version 0.6.2, measured 2026-10-04. Source: https://github.com/tech4biz-yasha/agmi
 Method text proposed for IETF draft-han-bmwg-agent-security-benchmark metric 5.4.7.
 
 ## At rest (eight storage-level edits, attacker has store access, no keys)
-- OpenFang model, tip-persistence fix (reference model of a hash chain): T1 rejected, T2 rejected, T3 rejected, T4 rejected, T5 rejected, T6 n/a, T7 n/a, T8 n/a
-- LangGraph SqliteSaver (langgraph-checkpoint-sqlite 3.1.1): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted
-- LangGraph PostgresSaver (langgraph-checkpoint-postgres 3.1.2): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted
-- LangGraph RedisSaver (langgraph-checkpoint-redis 0.5.2): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted
-- OpenAI Agents SDK SQLiteSession (openai-agents 0.20.0): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted
-- LlamaIndex Memory, SQLAlchemy chat store (llama-index-core 0.14.24): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted
-- Letta block checkpoint history (letta 0.16.8): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted
-- Mem0 local Qdrant store (mem0ai 2.0.20): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 error, T7 accepted, T8 accepted
-- inspeximus, receipts off (default) (inspeximus 3.0.0): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 error, T7 accepted, T8 accepted
-- inspeximus, receipts on, attacker holds the store directory (inspeximus 3.0.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 error, T7 reported, T8 reported
-- inspeximus, receipts on, attacker also holds the config home (inspeximus 3.0.0): T1 reported, T2 accepted, T3 reported, T4 reported, T5 reported, T6 error, T7 reported, T8 reported
-- langgraph-ledger over SqliteSaver, hash-chained ledger, verify_thread audit (langgraph-ledger 0.3.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 accepted, T6 reported, T7 reported, T8 accepted
-- memory-blackbox memory.md watcher, agent process alive, scan audit (memory-blackbox 0.1.1): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported
-- memory-blackbox memory.md watcher, agent restarted before the scan, scan audit (memory-blackbox 0.1.1): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported
-- Atelya Attest, keyed hash chain, verify_chain audit (atelya-attest 0.1.1): T1 reported, T2 accepted, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported
-- Atelya Attest, keyed hash chain plus anchored head, verify and consistency audit (atelya-attest 0.1.1): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported
-- CONTINUUM event log, hash chain, verify_events audit (continuum-agent 0.1.0): T1 reported, T2 accepted, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported
-- CONTINUUM event log, hash chain plus Ed25519-signed head, attest-verify audit (continuum-agent 0.1.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported
-- acrf-memory-guard, per-entry HMAC over a JSON store (acrf-memory-guard 0.1.0): T1 rejected, T2 accepted, T3 accepted, T4 accepted, T5 rejected, T6 accepted, T7 accepted, T8 rejected
+- OpenFang model, tip-persistence fix (reference model of a hash chain): T1 rejected, T2 rejected, T3 rejected, T4 rejected, T5 rejected, T6 n/a, T7 n/a, T8 n/a, T9 accepted
+- LangGraph SqliteSaver (langgraph-checkpoint-sqlite 3.1.1): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
+- LangGraph PostgresSaver (langgraph-checkpoint-postgres 3.1.2): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
+- LangGraph RedisSaver (langgraph-checkpoint-redis 0.5.2): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
+- OpenAI Agents SDK SQLiteSession (openai-agents 0.20.0): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
+- LlamaIndex Memory, SQLAlchemy chat store (llama-index-core 0.14.24): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
+- Letta block checkpoint history (letta 0.16.8): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
+- Mem0 local Qdrant store (mem0ai 2.0.20): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 error, T7 accepted, T8 accepted, T9 accepted
+- inspeximus, receipts off (default) (inspeximus 3.0.0): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 error, T7 accepted, T8 accepted, T9 accepted
+- inspeximus, receipts on, attacker holds the store directory (inspeximus 3.0.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 error, T7 reported, T8 reported, T9 reported
+- inspeximus, receipts on, attacker also holds the config home (inspeximus 3.0.0): T1 reported, T2 accepted, T3 reported, T4 reported, T5 reported, T6 error, T7 reported, T8 reported, T9 accepted
+- langgraph-ledger over SqliteSaver, hash-chained ledger, verify_thread audit (langgraph-ledger 0.3.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 accepted, T6 reported, T7 reported, T8 accepted, T9 reported
+- memory-blackbox memory.md watcher, agent process alive, scan audit (memory-blackbox 0.1.1): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 reported
+- memory-blackbox memory.md watcher, agent restarted before the scan, scan audit (memory-blackbox 0.1.1): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 accepted
+- Atelya Attest, keyed hash chain, verify_chain audit (atelya-attest 0.1.1): T1 reported, T2 accepted, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 accepted
+- Atelya Attest, keyed hash chain plus anchored head, verify and consistency audit (atelya-attest 0.1.1): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 reported
+- CONTINUUM event log, hash chain, verify_events audit (continuum-agent 0.1.0): T1 reported, T2 accepted, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 accepted
+- CONTINUUM event log, hash chain plus Ed25519-signed head, attest-verify audit (continuum-agent 0.1.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 reported
+- acrf-memory-guard, per-entry HMAC over a JSON store (acrf-memory-guard 0.1.0): T1 rejected, T2 accepted, T3 accepted, T4 accepted, T5 rejected, T6 accepted, T7 accepted, T8 rejected, T9 accepted
+- Agent Memory reference runtime, SQLite canonical substrate, bucketed row digests, fail-closed open (agent-memory-reference 0.2.0 (f2aef57)): T1 rejected, T2 rejected, T3 rejected, T4 rejected, T5 rejected, T6 rejected, T7 rejected, T8 rejected, T9 accepted
 
 ## Front door (six attacks through the tool's own write path)
 - LangGraph SqliteStore: Planted fact surfaced, Cross-user leak kept out, Retrieval hijack surfaced, Hidden instruction surfaced, Update poisoning surfaced, Metadata poisoning surfaced

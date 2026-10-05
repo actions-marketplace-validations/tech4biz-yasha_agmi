@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
 import sqlite3
 import tempfile
 from pathlib import Path
@@ -124,6 +125,22 @@ class LlamaIndexMemoryAdapter(MemoryAdapter):
         conn.execute(f"DELETE FROM {TABLE} WHERE id=?", (target,))
         conn.commit()
         conn.close()
+
+    # --- T9 whole-store rollback: the SQLite file is the whole store -------
+    supports_snapshot = True
+
+    def snapshot_store(self):
+        token = tempfile.mkdtemp(prefix="agmi-lli-snap-")
+        shutil.copy2(self._db, Path(token) / "memory.db")
+        return token
+
+    def restore_store(self, token) -> None:
+        shutil.copy2(Path(token) / "memory.db", self._db)
+        shutil.rmtree(token, ignore_errors=True)
+
+    def append_genuine(self) -> None:
+        self._put(SESSION, [f"{SEED_TOKEN}{self._seeded}"])
+        self._seeded += 1
 
     def reload(self) -> None:
         return None

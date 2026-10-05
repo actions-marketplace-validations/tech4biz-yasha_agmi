@@ -215,6 +215,45 @@ class ContinuumEventsAdapter(MemoryAdapter):
             pass
         self._open()
 
+    # --- T9 whole-store rollback: the store directory rolls back; the signed
+    # --- head (attested row) is held outside it ------------------------------
+
+    supports_snapshot = True
+
+    def _close(self) -> None:
+        try:
+            self._store.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+    def snapshot_store(self):
+        self._close()
+        token = tempfile.mkdtemp(prefix="agmi-continuum-snap-")
+        shutil.copytree(self._dir, token, dirs_exist_ok=True)
+        self._open()
+        return token
+
+    def restore_store(self, token) -> None:
+        self._close()
+        for p in Path(self._dir).iterdir():
+            p.unlink() if p.is_file() else shutil.rmtree(p, ignore_errors=True)
+        shutil.copytree(token, self._dir, dirs_exist_ok=True)
+        shutil.rmtree(token, ignore_errors=True)
+        self._open()
+
+    def append_genuine(self) -> None:
+        from continuum import EventType
+        n = len(self._store.read_events(RUN))
+        self._store.append_event(RUN, EventType.WORK_COMPLETED,
+                                 {"doc": n, "note": f"agmi-{RUN}-{n}: the limit is {40 + n}"})
+        if self.attested:
+            # the tool's own path: attest the new head after writing it
+            from continuum.security.attestation import generate_keypair, sign_chain
+            priv, _pub = generate_keypair()
+            head = self._store.read_events(RUN)[-1]
+            self._attestation = sign_chain(priv, RUN, head.sequence, head.hash,
+                                           signer="agmi").to_dict()
+
     def verify(self) -> bool:
         self.verify_detail = None
         rep = self._store.verify_events(RUN)

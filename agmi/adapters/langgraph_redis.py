@@ -218,6 +218,42 @@ class LangGraphRedisAdapter(MemoryAdapter):
     def owner_of(self, record):
         return str(record.fields["thread_id"])
 
+    # --- hooks for T9: this run's keys are the store -------------------------
+    # DUMP and RESTORE carry each key's exact serialized value, JSON documents
+    # included, so the restored store is byte for byte the older one.
+    supports_snapshot = True
+
+    def _store_patterns(self) -> list[str]:
+        return [f"checkpoint:{self._prefix}-*", f"checkpoint_latest:{self._prefix}-*",
+                f"checkpoint_write:{self._prefix}-*", f"checkpoint_blob:{self._prefix}-*"]
+
+    def _store_keys(self) -> list[bytes]:
+        keys: list[bytes] = []
+        for pat in self._store_patterns():
+            keys.extend(self._r.scan_iter(pat))
+        return keys
+
+    def snapshot_store(self):
+        return {k: self._r.dump(k) for k in self._store_keys()}
+
+    def restore_store(self, token) -> None:
+        self._close_saver()
+        keys = self._store_keys()
+        if keys:
+            self._r.delete(*keys)
+        for k, blob in token.items():
+            self._r.restore(k, 0, blob, replace=True)
+        self._open_saver()
+
+    def append_genuine(self) -> None:
+        from langgraph.checkpoint.base import create_checkpoint
+        cfg = {"configurable": {"thread_id": self.thread, "checkpoint_ns": ""}}
+        tup = self._saver.get_tuple(cfg)
+        cp = create_checkpoint(tup.checkpoint, {"state": "agmi-seed-late"}, 99)
+        cp["channel_values"] = {"state": "agmi-seed-late"}
+        self._saver.put(tup.config, cp, {"source": "loop", "step": 99, "writes": {}},
+                        {"state": "late"})
+
     # --- the tool's own read path -----------------------------------------
 
     def reload(self) -> None:

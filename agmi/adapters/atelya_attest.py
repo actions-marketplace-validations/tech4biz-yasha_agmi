@@ -196,6 +196,36 @@ class AtelyaAttestChainAdapter(MemoryAdapter):
     def reload(self) -> None:
         return  # the store is the file; nothing is cached
 
+    # --- T9 whole-store rollback: the chain files roll back, the anchor ledger
+    # --- (a separate directory the attacker cannot reach) does not ----------
+
+    supports_snapshot = True
+
+    def snapshot_store(self):
+        token = tempfile.mkdtemp(prefix="agmi-atelya-snap-")
+        shutil.copytree(self._dir, token, dirs_exist_ok=True)
+        return token, {k: list(v) for k, v in self._events.items()}
+
+    def restore_store(self, token) -> None:
+        d, events = token
+        for p in Path(self._dir).iterdir():
+            p.unlink() if p.is_file() else shutil.rmtree(p, ignore_errors=True)
+        shutil.copytree(d, self._dir, dirs_exist_ok=True)
+        shutil.rmtree(d, ignore_errors=True)
+        self._events = {k: list(v) for k, v in events.items()}
+
+    def append_genuine(self) -> None:
+        from amem_attest import build_chain
+        i = len(self._events[CTX])
+        self._events[CTX].append({
+            "op": "add", "id": f"{CTX}-m{i}", "key": f"slot{i}",
+            "text": f"agmi-{CTX}-{i}: the limit is {40 + i}",
+            "created_at": 1_700_000_000 + i,
+        })
+        self._write_chain(CTX, build_chain(self._events[CTX], KEY))
+        if self.anchored:
+            self._anchor()
+
     def verify(self) -> bool:
         from amem_attest import verify_chain
         self.verify_detail = None

@@ -329,6 +329,61 @@ class LettaBlockHistoryAdapter(MemoryAdapter):
         return self.mutate_payload(forged)
 
     # --- reload + verify (the tool's own integrity answer) -------------
+    # --- T9 whole-store rollback ------------------------------------------
+    # Letta's checkpoint history lives entirely in Postgres (block and
+    # block_history); there is no state the store keeps off the database.
+    # Snapshot = copy those rows, restore = put them back, append = one more
+    # genuine checkpoint through BlockManager. The restored (older) rows are
+    # self-consistent, so Letta serves the rolled-back checkpoint.
+    supports_snapshot = True
+    _T9_TABLES = ("block_history", "block")
+
+    def snapshot_store(self):
+        # Keep the current-checkpoint pointer so it can be put back last; the
+        # two tables reference each other (block -> block_history by the
+        # pointer, block_history -> block by block_id), a cycle no single load
+        # order satisfies on its own.
+        conn = self._raw()
+        cur = conn.cursor()
+        snap = {}
+        import io
+        for t in self._T9_TABLES:
+            buf = io.StringIO()
+            cur.copy_expert(f"COPY {t} TO STDOUT", buf)
+            snap[t] = buf.getvalue()
+        conn.close()
+        return snap
+
+    def restore_store(self, token) -> None:
+        conn = self._raw()
+        cur = conn.cursor()
+        import io
+        # block and block_history reference each other, so no COPY order
+        # satisfies the pointer FK (it is checked per row and is not
+        # deferrable). Drop that one FK, reload both tables, then recreate it.
+        cur.execute("ALTER TABLE block DROP CONSTRAINT fk_block_current_history_entry")
+        cur.execute("DELETE FROM block_history")
+        cur.execute("DELETE FROM block")
+        cur.copy_expert("COPY block FROM STDIN", io.StringIO(token["block"]))
+        cur.copy_expert("COPY block_history FROM STDIN", io.StringIO(token["block_history"]))
+        cur.execute("ALTER TABLE block ADD CONSTRAINT fk_block_current_history_entry "
+                    "FOREIGN KEY (current_history_entry_id) REFERENCES block_history(id)")
+        conn.commit()
+        conn.close()
+
+    def append_genuine(self) -> None:
+        from letta.schemas.block import BlockUpdate
+        from letta.services.block_manager import BlockManager
+
+        async def _append():
+            bm = BlockManager()
+            n = len(self.read_all_raw())
+            await bm.update_block_async(
+                self._block_id, BlockUpdate(value=f"{SEED_TOKEN}{n}"),
+                actor=self._actor)
+            await bm.checkpoint_block_async(self._block_id, actor=self._actor)
+        asyncio.run(_append())
+
     def reload(self) -> None:
         # Letta reads every request from the database; nothing is cached
         # in-process between calls, so a reload is a no-op.

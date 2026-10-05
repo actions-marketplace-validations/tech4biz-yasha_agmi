@@ -55,3 +55,17 @@ def test_truncation_is_named_by_the_anchor_not_the_chain():
         assert "truncated" in (a.verify_detail or "")
     finally:
         a.teardown()
+
+
+def test_t9_rollback_is_served_by_the_chain_and_reported_by_the_anchor():
+    """T9: the chain files restored from an older copy after one genuine add. A
+    self-consistent older chain verifies; the anchor ledger outside the store still
+    names the newer head and reports the rollback."""
+    from agmi.attacks.at_rest import SnapshotRollbackAttack
+    r = SnapshotRollbackAttack().run(AtelyaAttestChainAdapter())
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert not r.detected
+    a = AtelyaAttestAnchoredAdapter()
+    r = SnapshotRollbackAttack().run(a)
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert r.detected and "anchor" in (a.verify_detail or "")

@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sqlite3
 import tempfile
 from pathlib import Path
@@ -317,6 +318,51 @@ class InspeximusRowsAdapter(MemoryAdapter):
         return self.mutate_payload(forged)
 
     # --- restart + the tool's own answer -------------------------------
+    # --- T9 whole-store rollback -----------------------------------------
+    # The store directory holds memory.json and, with receipts on, the
+    # receipts sidecar. The signed chain head lives outside, in the user's
+    # config home. What rolls back depends on what the attacker holds:
+    #   default (receipts off): no head anywhere -> older copy served.
+    #   receipts, dir only: the head in config home still names the newer
+    #     tip, so the restored (shorter) chain is reported by verify_writes.
+    #   receipts, dir + home: the head rolls back with the store, so the
+    #     older copy is internally consistent and is served.
+    supports_snapshot = True
+
+    def snapshot_store(self):
+        self._store = None
+        store = tempfile.mkdtemp(prefix="agmi-insp-snap-")
+        shutil.copytree(self._dir.name, store, dirs_exist_ok=True)
+        head = None
+        if self.receipts and self.attacker_holds_head:
+            hp = Path(self._open_for_head_path())
+            if hp.exists():
+                head = (str(hp), hp.read_text(encoding="utf-8"))
+        self._store = self._open()
+        return store, head
+
+    def _open_for_head_path(self) -> str:
+        s = self._open()
+        hp = s.head_path()
+        return hp
+
+    def restore_store(self, token) -> None:
+        store, head = token
+        self._store = None
+        for entry in os.scandir(self._dir.name):
+            shutil.rmtree(entry.path, ignore_errors=True) if entry.is_dir() else os.remove(entry.path)
+        shutil.copytree(store, self._dir.name, dirs_exist_ok=True)
+        shutil.rmtree(store, ignore_errors=True)
+        if head is not None:
+            hp, text = head
+            Path(hp).parent.mkdir(parents=True, exist_ok=True)
+            Path(hp).write_text(text, encoding="utf-8")
+        self._store = self._open()
+
+    def append_genuine(self) -> None:
+        n = len(self.read_all_raw())
+        self._store.remember(f"{SEED_TOKEN}{n}: the limit is {50 + n}", key=f"fact::{n}")
+
     def reload(self) -> None:
         self._store = self._open()
 

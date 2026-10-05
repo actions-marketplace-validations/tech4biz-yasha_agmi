@@ -57,3 +57,17 @@ def test_truncation_is_named_by_the_attestation_not_the_chain():
         assert "ALTERED" in (a.verify_detail or "")
     finally:
         a.teardown()
+
+
+def test_t9_rollback_is_served_by_the_chain_and_reported_by_the_signed_head():
+    """T9: agent.db restored from an older copy after one genuine event. The chain
+    verifies on its own; the signed head held outside the store names the newer
+    sequence and attest-verify reports ALTERED."""
+    from agmi.attacks.at_rest import SnapshotRollbackAttack
+    r = SnapshotRollbackAttack().run(ContinuumEventsAdapter())
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert not r.detected
+    a = ContinuumEventsAttestedAdapter()
+    r = SnapshotRollbackAttack().run(a)
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert r.detected and "ALTERED" in (a.verify_detail or "")

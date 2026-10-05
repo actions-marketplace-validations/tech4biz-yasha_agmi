@@ -190,6 +190,46 @@ class MemoryBlackboxMdAdapter(MemoryAdapter):
     def owner_of(self, record):
         return record.fields["ctx"]
 
+    # --- T9 whole-store rollback: the directory holds the memory files, the
+    # --- ledger (blackbox.db) and the key; all of it rolls back together ----
+
+    supports_snapshot = True
+
+    def _close_ledger(self) -> None:
+        try:
+            self._bb.ledger.connection.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _reopen_keep_digests(self) -> None:
+        # The watcher process stays up: it keeps the digests it already holds.
+        # Only the ledger connection is cycled so the SQLite file copies cleanly.
+        digests = dict(self._watch._snapshots)
+        self._open_watcher()
+        self._watch._snapshots = digests
+
+    def snapshot_store(self):
+        self._close_ledger()
+        token = tempfile.mkdtemp(prefix="agmi-mbb-snap-")
+        shutil.copytree(self._dir, token, dirs_exist_ok=True)
+        self._reopen_keep_digests()
+        return token
+
+    def restore_store(self, token) -> None:
+        self._close_ledger()
+        for p in Path(self._dir).iterdir():
+            p.unlink() if p.is_file() else shutil.rmtree(p, ignore_errors=True)
+        shutil.copytree(token, self._dir, dirs_exist_ok=True)
+        shutil.rmtree(token, ignore_errors=True)
+        self._reopen_keep_digests()
+
+    def append_genuine(self) -> None:
+        lines = self._lines(CTX)
+        i = len(lines)
+        lines.append(f"- agmi-{CTX}-{i}: the limit is {40 + i}{META_SEP}ts={1_700_000_000 + i} -->")
+        self._write_lines(CTX, lines)
+        self._watch.scan()  # the agent's own write, captured by the watcher
+
     # --- the audit ----------------------------------------------------------
 
     def reload(self) -> None:

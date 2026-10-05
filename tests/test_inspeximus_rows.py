@@ -156,3 +156,29 @@ def test_an_anchor_off_the_machine_detects_the_truncation_the_head_row_accepts()
         assert any("shrank" in p for p in problems), problems
     finally:
         a.teardown()
+
+
+def test_t9_rollback_depends_on_who_holds_the_chain_head():
+    """T9: restore the store directory from an older copy after one genuine
+    remember(). The default (receipts off) keeps no head, so the older copy is
+    served. With receipts on, the signed head lives in the user's config home:
+    an attacker holding only the store directory leaves a chain shorter than
+    that head, which verify_writes reports; an attacker holding the config home
+    too rolls the head back with the store, so the older copy is served."""
+    from agmi.attacks.at_rest import SnapshotRollbackAttack
+    from agmi.adapters.inspeximus_rows import (
+        InspeximusDefaultAdapter, InspeximusRowsSidecarAdapter,
+        InspeximusRowsSidecarHeadAdapter)
+
+    r = SnapshotRollbackAttack().run(InspeximusDefaultAdapter())
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert not r.detected
+
+    a = InspeximusRowsSidecarAdapter()
+    r = SnapshotRollbackAttack().run(a)
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert r.detected and "head kept outside the store" in (a.verify_detail or "")
+
+    r = SnapshotRollbackAttack().run(InspeximusRowsSidecarHeadAdapter())
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert not r.detected

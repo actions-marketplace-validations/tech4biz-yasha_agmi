@@ -252,6 +252,39 @@ class LangGraphSqliteAdapter(MemoryAdapter):
         conn.close()
 
     # --- reload + verify (the tool's own integrity answer) -------------
+    # --- hooks for T9: the SQLite file is the store ----------------------
+    supports_snapshot = True
+
+    def snapshot_store(self):
+        self._close_for_snapshot()
+        return self._copy_store(self._db)
+
+    def restore_store(self, token) -> None:
+        self._close_for_snapshot()
+        self._restore_store(token, self._db)
+        self.reload()
+
+    def _close_for_snapshot(self) -> None:
+        # Subclasses that wrap the saver (ledger, encrypted) own the inner
+        # connection and close it in _close(); use that when it exists.
+        close = getattr(self, "_close", None)
+        if close is not None:
+            close()
+            return
+        try:
+            self._saver.conn.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+    def append_genuine(self) -> None:
+        from langgraph.checkpoint.base import create_checkpoint
+        self.reload()
+        cfg = {"configurable": {"thread_id": THREAD}}
+        tup = self._saver.get_tuple(cfg)
+        cp = create_checkpoint(tup.checkpoint, {"state": f"{SEED_TOKEN}late"}, 99)
+        cp["channel_values"] = {"state": f"{SEED_TOKEN}late"}
+        self._saver.put(tup.config, cp, {"source": "loop", "step": 99, "writes": {}}, {})
+
     def reload(self) -> None:
         from langgraph.checkpoint.sqlite import SqliteSaver
         try:

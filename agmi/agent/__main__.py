@@ -40,13 +40,60 @@ def main(argv=None) -> int:
     ap.add_argument("--embedder", choices=sorted(EMBEDDERS), default="minilm")
     ap.add_argument("--no-mutate", action="store_true",
                     help="base attacks only, no content-evasion mutations")
+    ap.add_argument("--families", default="front-door",
+                    help="comma-separated: front-door, at-rest (default "
+                         "front-door). at-rest runs the nine storage edits "
+                         "against the target's store.")
+    ap.add_argument("--compose", action="store_true",
+                    help="run the composition engine: chain storage moves and "
+                         "report sequences that land where no single move does.")
+    ap.add_argument("--max-len", type=int, default=2,
+                    help="max sequence length for --compose (default 2; raise "
+                         "only once a length-2 finding exists).")
     ap.add_argument("--json", action="store_true", help="emit JSON")
     args = ap.parse_args(argv)
 
-    adapter = _library_target(args.target, args.embedder)
-    report = hunt(adapter, target=args.target, mutate=not args.no_mutate)
-    out = to_json(report) if args.json else to_text(report)
-    sys.stdout.write(out)
+    # If the user asked only for --compose, don't also run the front-door
+    # default. Families run only when named (or when --compose is not given).
+    families_given = any(a.startswith("--families") for a in (argv or sys.argv[1:]))
+    if args.compose and not families_given:
+        families = []
+    else:
+        families = [f.strip() for f in args.families.split(",") if f.strip()]
+    unknown = [f for f in families if f not in ("front-door", "at-rest")]
+    if unknown:
+        raise SystemExit(f"unknown families: {', '.join(unknown)}; "
+                         f"choose from front-door, at-rest")
+
+    out_parts = []
+    if "front-door" in families:
+        try:
+            adapter = _library_target(args.target, args.embedder)
+        except SystemExit as e:
+            if len(families) == 1:
+                raise
+            out_parts.append(f"front-door: skipped ({e})\n")
+        else:
+            report = hunt(adapter, target=args.target, mutate=not args.no_mutate)
+            out_parts.append(to_json(report) if args.json else to_text(report))
+    if "at-rest" in families:
+        from agmi.agent.at_rest_hunt import hunt_at_rest, at_rest_target
+        from agmi.agent.report import at_rest_to_json, at_rest_to_text
+        a = at_rest_target(args.target)
+        authz_line, findings = hunt_at_rest(a, target=args.target)
+        out_parts.append(at_rest_to_json(args.target, authz_line, findings)
+                         if args.json
+                         else at_rest_to_text(args.target, authz_line, findings))
+    if args.compose:
+        from agmi.agent.at_rest_hunt import at_rest_target
+        from agmi.agent.compose import compose
+        from agmi.agent.report import compose_to_json, compose_to_text
+        authz_line, findings = compose(lambda: at_rest_target(args.target),
+                                       target=args.target, max_len=args.max_len)
+        out_parts.append(compose_to_json(args.target, authz_line, findings)
+                         if args.json
+                         else compose_to_text(args.target, authz_line, findings))
+    sys.stdout.write("\n".join(out_parts))
     return 0
 
 

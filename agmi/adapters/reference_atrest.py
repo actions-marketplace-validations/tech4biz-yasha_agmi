@@ -49,6 +49,10 @@ class ReferenceAtRestAdapter(MemoryAdapter):
     def __init__(self):
         self._dir: tempfile.TemporaryDirectory | None = None
         self._db: Path | None = None
+        #: The witness: the last head (seq, tag) for CTX, held by the tool
+        #: off the store. Models a head handed to another machine. The
+        #: attacker has the files, not this.
+        self._witness: tuple | None = None
 
     def setup(self) -> None:
         self._dir = tempfile.TemporaryDirectory()
@@ -85,9 +89,48 @@ class ReferenceAtRestAdapter(MemoryAdapter):
                   (ctx, n - 1, prev, head_sig))
         c.commit()
         c.close()
+        if ctx == CTX:
+            self._witness = (n - 1, prev)
 
     def seed(self, n: int) -> None:
         self._seed_ctx(CTX, SEED, n)
+
+    # --- hooks for T9: the SQLite file is the store; the witness is not --
+    supports_snapshot = True
+
+    def snapshot_store(self):
+        return self._copy_store(self._db)
+
+    def restore_store(self, token) -> None:
+        self._restore_store(token, self._db)
+
+    def append_genuine(self) -> None:
+        c = self._raw()
+        last = c.execute("SELECT seq, tag FROM rec WHERE ctx=? ORDER BY seq DESC LIMIT 1",
+                         (CTX,)).fetchone()
+        # The witness advances only forward. A genuine write must build on the
+        # head the tool last witnessed; if the chain on disk has fallen below
+        # it (a truncation or rollback happened before this write), refuse to
+        # append rather than re-anchor the head to the shortened chain. Without
+        # this, truncate-then-write would launder the deletion: the write would
+        # re-stamp head and witness onto the shorter chain and the lost records
+        # would vanish with no trace. (Found by the composition engine.)
+        if self._witness is not None and (last[0], last[1]) != self._witness:
+            c.close()
+            raise RuntimeError(
+                "cannot append: the chain on disk is below the witnessed head "
+                f"(disk seq {last[0]}, witnessed seq {self._witness[0]}); the "
+                "store was truncated or rolled back before this write")
+        seq, prev = last[0] + 1, last[1]
+        content = f"{SEED}late"
+        meta = json.dumps({"owner": CTX, "source": "user", "ts": seq})
+        tag = _tag(CTX, seq, content, meta, prev)
+        c.execute("INSERT INTO rec VALUES (?,?,?,?,?)", (CTX, seq, content, meta, tag))
+        head_sig = hmac.new(_KEY, f"{CTX}|{seq}|{tag}".encode(), hashlib.sha256).hexdigest()
+        c.execute("INSERT OR REPLACE INTO head VALUES (?,?,?,?)", (CTX, seq, tag, head_sig))
+        c.commit()
+        c.close()
+        self._witness = (seq, tag)
 
     def seed_other(self, n: int) -> None:
         self._seed_ctx(OTHER_CTX, OTHER_SEED, n)
@@ -189,5 +232,8 @@ class ReferenceAtRestAdapter(MemoryAdapter):
             return False
         if not recs or recs[-1][0] != head[0] or prev != head[1]:
             self.verify_detail = "head does not match last record (truncated or rolled back)"
+            return False
+        if self._witness is not None and (head[0], head[1]) != self._witness:
+            self.verify_detail = "stored head is older than the witnessed head (store rolled back)"
             return False
         return True

@@ -70,3 +70,13 @@ def test_a_signed_entry_from_the_other_user_is_served_under_this_users_key():
         assert a.verify() is True
     finally:
         a.teardown()
+
+
+def test_t9_rollback_is_served():
+    """T9: the JSON store restored from an older copy after one genuine signed
+    entry. Every remaining entry carries a valid HMAC, so read_safe serves the
+    older copy as current."""
+    from agmi.attacks.at_rest import SnapshotRollbackAttack
+    r = SnapshotRollbackAttack().run(AcrfMemoryGuardAdapter())
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert not r.detected

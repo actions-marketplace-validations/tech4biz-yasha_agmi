@@ -44,6 +44,8 @@ AT_REST = [
      "Every record is genuine; only the order is rewound. Needs the sequence covered, not just each record."),
     ("metadata_tamper", "T8", "Metadata tamper", "Change a record's owner, source or timestamp and leave its content untouched.",
      "Moves a record to another user or marks an untrusted source as trusted."),
+    ("snapshot_rollback", "T9", "Snapshot rollback", "Restore an older complete copy of the store, taken before the newest genuine record was written.",
+     "Nothing is forged; the store is just older than it should be. Only a head held off the store catches it."),
 ]
 FRONT_DOOR = [
     ("memory_injection", "Planted fact", "Write a false fact through the tool's own API and see whether recall serves it as the user's own.",
@@ -68,6 +70,7 @@ ROW_NAMES = {
     "openai-agents-sqlite-session": ("OpenAI Agents SDK SQLiteSession", "openai-agents 0.20.0"),
     "llamaindex-memory-sqlite": ("LlamaIndex Memory, SQLAlchemy chat store", "llama-index-core 0.14.24"),
     "acrf-memory-guard": ("acrf-memory-guard, per-entry HMAC over a JSON store", "acrf-memory-guard 0.1.0"),
+    "agent-memory": ("Agent Memory reference runtime, SQLite canonical substrate, bucketed row digests, fail-closed open", "agent-memory-reference 0.2.0 (f2aef57)"),
     "langgraph-ledger": ("langgraph-ledger over SqliteSaver, hash-chained ledger, verify_thread audit", "langgraph-ledger 0.3.0"),
     "memory-blackbox-md": ("memory-blackbox memory.md watcher, agent process alive, scan audit", "memory-blackbox 0.1.1"),
     "memory-blackbox-md+restart": ("memory-blackbox memory.md watcher, agent restarted before the scan, scan audit", "memory-blackbox 0.1.1"),
@@ -97,6 +100,7 @@ ROW_REPOS = {
     "openai-agents-sqlite-session": "https://github.com/openai/openai-agents-python",
     "llamaindex-memory-sqlite": "https://github.com/run-llama/llama_index",
     "acrf-memory-guard": "https://github.com/kannasekar-alt/ACRF",
+    "agent-memory": "https://github.com/MythologIQ-Labs-LLC/agent-memory",
     "langgraph-ledger": "https://pypi.org/project/langgraph-ledger/",
     "memory-blackbox-md": "https://github.com/lavkumarv/memory-blackbox",
     "memory-blackbox-md+restart": "https://github.com/lavkumarv/memory-blackbox",
@@ -279,6 +283,12 @@ EXPLAIN = {
         sees="The user is rewound to an older state and the revocation is gone. Every record is genuine and in this user's own history.",
         stops="Position plus a signed head: the sequence itself must be covered, not the records one by one.",
         beats="Any store that verifies records independently, even with the owner bound in."),
+    "snapshot_rollback": dict(
+        story="The agent approved a transfer an hour ago. The attacker restores last night's backup of the whole store, sidecar files and all.",
+        before=[("B", "nnnnn")], after=[("B", "nnnn")], note="B4 gone; every remaining byte is as the store wrote it",
+        sees="The approval never happened as far as the agent can tell. Every digest, chain link and stored head still checks out.",
+        stops="A head the attacker cannot restore with the files: a witness on another machine, a receipt held elsewhere, a transparency log.",
+        beats="Every store that keeps its head beside its records, including ones that reject all of T1 to T8."),
     "metadata_tamper": dict(
         story="A record from an untrusted web page sits in the store marked source: web. The attacker changes that one tag to source: user and touches nothing else.",
         before=[("B", "nnnnn")], after=[("B", "nnnxn")], note="source tag of B3 changed, text untouched",
@@ -371,6 +381,7 @@ LEVELS = [
     ("L1", "Bytes bound", "Rejects on the read path every edit that changes or adds bytes: T1, T3, T5.", ["tamper", "delete_middle", "forge"]),
     ("L2", "Sequence bound", "Also rejects deletion, reordering and rollback: T2, T4, T7.", ["tamper", "delete_middle", "forge", "truncate", "reorder", "rollback_replay"]),
     ("L3", "Context bound", "Also rejects a record moved between owners and a metadata change: T6, T8.", ["tamper", "delete_middle", "forge", "truncate", "reorder", "rollback_replay", "cross_replay", "metadata_tamper"]),
+    ("L4", "Head anchored off the store", "Also rejects a rollback of the whole store to an older genuine copy: T9.", ["tamper", "delete_middle", "forge", "truncate", "reorder", "rollback_replay", "cross_replay", "metadata_tamper", "snapshot_rollback"]),
 ]
 
 def level_of(r):
@@ -488,7 +499,7 @@ def build():
     d_date, d_platform = d["date"], d["platform"]
     at_rest_keys = [k for k in ["openfang(model,fixed)", "langgraph-sqlite", "langgraph-postgres", "langgraph-redis", "openai-agents-sqlite-session", "llamaindex-memory-sqlite", "letta-block-history",
                                 "mem0-qdrant-local", "inspeximus-default", "inspeximus-rcpt+dir",
-                                "inspeximus-rcpt+dir+home", "langgraph-ledger", "memory-blackbox-md", "memory-blackbox-md+restart", "atelya-attest-chain", "atelya-attest-chain+anchor", "continuum-events", "continuum-events+attest", "acrf-memory-guard"] if k in rows]
+                                "inspeximus-rcpt+dir+home", "langgraph-ledger", "memory-blackbox-md", "memory-blackbox-md+restart", "atelya-attest-chain", "atelya-attest-chain+anchor", "continuum-events", "continuum-events+attest", "acrf-memory-guard", "agent-memory"] if k in rows]
     fd_keys = [k for k in ["langgraph-sqlite-store", "letta-archival", "mem0-qdrant-local",
                            "inspeximus-default", "inspeximus-defended", "inspeximus-defended-key",
                            "naive-mem(scoped)", "naive-mem(unscoped)", "reference-defended(model)"] if k in rows]
@@ -497,7 +508,8 @@ def build():
 
     # count the headline
     all8 = [k for k in ["langgraph-sqlite", "openai-agents-sqlite-session", "llamaindex-memory-sqlite", "letta-block-history", "mem0-qdrant-local", "inspeximus-default"]
-            if k in rows and all(rows[k]["cells"][a]["verdict"] == "accepted" for a, *_ in AT_REST)]
+            if k in rows and all(rows[k]["cells"].get(a, {}).get("verdict", "n/a") in ("accepted", "n/a") for a, *_ in AT_REST)
+            and any(rows[k]["cells"].get(a, {}).get("verdict") == "accepted" for a, *_ in AT_REST)]
 
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "logo.svg").write_bytes((ROOT / "docs" / "logo.svg").read_bytes())
@@ -769,6 +781,7 @@ Zenodo. https://doi.org/10.5281/zenodo.22860886</code></pre>
 <dt>memory-blackbox</dt><dd>A signed, hash-chained provenance ledger with a watcher for memory files such as MEMORY.md. Measured as two rows: with the agent process alive across the edit, every one of the eight edits changes the file's digest and the next scan records it as an out-of-band write; with the agent restarted between the edit and the scan, 0.1.0 served all eight because the new process baselined from the file. Reported privately and fixed the same day in 0.1.1 (<a href="https://github.com/lavkumarv/memory-blackbox/pull/31" rel="noopener">PR #31</a>): the ledger's last write is now the baseline, and both rows report all eight. The first fix in a store driven by the suite; the maintainer runs the agmi Action in CI. The ledger itself is out of the suite's scope and was not edited.</dd>
 <dt>Atelya Attest</dt><dd>A keyed hash chain over the agent's memory op-log, with an optional head checkpoint in a ledger kept under separate control. Measured as two rows. The chain alone reports a changed, deleted, swapped, forged, cross-context or rolled-back entry and a relabelled one, and serves tail truncation, since a shorter chain is still a valid chain. With the anchored head, the truncation is reported too: all eight. The README says exactly this, and the measurement agrees.</dd>
 <dt>CONTINUUM</dt><dd>A hash-chained, append-only event log an agent recovers from, with <code>verify_events()</code> naming each violation by kind and sequence, and <code>continuum attest</code> signing the chain head. Measured as two rows: the chain alone reports seven of eight and serves tail truncation; with the signed head and the check <code>attest-verify</code> performs, all eight. The second package whose README boundary and measurement agree.</dd>
+<dt>agent-memory</dt><dd>The MythologIQ Agent Memory reference runtime (Apache-2.0, installed from the repository at commit f2aef57). Every canonical SQLite row is hashed into a bucketed Merkle digest, the governance log is chained, and a sidecar beside the database binds the configuration to the last committed generation. <code>open()</code> fails closed on any mismatch, and the agent cannot read a fact without <code>open()</code>, so all eight edits are refused on the read path. Two things the eight do not measure, recorded in the pinned tests: the digests are unkeyed SHA-256, so an attacker who recomputes them is not caught by the digests alone; and a rollback of the whole state directory, database and sidecar together, is served as genuine, because the generation anchor sits beside the store it anchors. The second is the stale-snapshot case the Agent Memory maintainers' own durability work (#571) names, and the shape of the ninth edit planned for the suite.</dd>
 <dt>acrf-memory-guard</dt><dd>Per-entry HMAC checked on read (the ACRF-04 pattern). The first product on the scorecard that claims tamper evidence: refuses a changed, forged or relabelled entry on the read path, and serves a missing, swapped, cross-user or rolled-back genuine entry, since the signature covers one entry's bytes and not its slot. Its own README says rollback is out of scope; the measurement agrees and adds the other four.</dd>
 <dt>Letta</dt><dd>Block checkpoint history and archival memory.</dd>
 <dt>Mem0</dt><dd>Local Qdrant store, at rest and front door.</dd>
@@ -837,7 +850,7 @@ Version {VERSION}, measured {d_date}. Source: https://github.com/tech4biz-yasha/
 Method text proposed for IETF draft-han-bmwg-agent-security-benchmark metric 5.4.7.
 
 ## At rest (eight storage-level edits, attacker has store access, no keys)
-""" + "\n".join(f"- {ROW_NAMES.get(k,(k,''))[0]} ({ROW_NAMES.get(k,(k,''))[1]}): " + ", ".join(f"{t} {rows[k]['cells'][a]['verdict']}" for a,t,*_ in AT_REST) for k in at_rest_keys) + """
+""" + "\n".join(f"- {ROW_NAMES.get(k,(k,''))[0]} ({ROW_NAMES.get(k,(k,''))[1]}): " + ", ".join(f"{t} {rows[k]['cells'].get(a, {}).get('verdict', 'n/a')}" for a,t,*_ in AT_REST) for k in at_rest_keys) + """
 
 ## Front door (six attacks through the tool's own write path)
 """ + "\n".join(f"- {ROW_NAMES.get(k,(k,''))[0]}: " + ", ".join(f"{n} {rows[k]['cells'][a]['verdict']}" for a,n,*_ in FRONT_DOOR) for k in fd_keys) + f"""

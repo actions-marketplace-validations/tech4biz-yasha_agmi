@@ -25,7 +25,7 @@ import os
 import sys
 
 from agmi.adapters.base import MemoryAdapter
-from agmi.attacks.at_rest import ALL_AT_REST_ATTACKS
+from agmi.attacks.at_rest import AT_REST_ATTACKS_WITH_SNAPSHOT as ALL_AT_REST_ATTACKS
 from agmi.attacks.base import AttackResult
 
 # Column labels from the proposed Section 6.6 test method.
@@ -38,6 +38,7 @@ LABELS = {
     "cross_replay": "T6 cross-context replay",
     "rollback_replay": "T7 rollback replay",
     "metadata_tamper": "T8 metadata tamper",
+    "snapshot_rollback": "T9 snapshot rollback",
 }
 
 

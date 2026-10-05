@@ -57,3 +57,13 @@ def test_truncate_silently_rewinds_core_memory():
         assert a.verify() is True
     finally:
         a.teardown()
+
+
+def test_t9_whole_store_rollback_is_served():
+    """T9: the block and block_history rows restored from an older copy after
+    one genuine checkpoint. Letta keeps no state off the database, so the older
+    checkpoint is self-consistent and served with the newest one gone."""
+    from agmi.attacks.at_rest import SnapshotRollbackAttack
+    r = SnapshotRollbackAttack().run(LettaBlockHistoryAdapter())
+    assert r.error is None and r.guard is None, (r.error, r.guard)
+    assert not r.detected

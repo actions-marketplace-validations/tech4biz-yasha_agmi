@@ -296,6 +296,55 @@ class MetadataTamperAttack(Attack):
                f"record {pos} lost its identity")
 
 
+class SnapshotRollbackAttack(Attack):
+    """T9. Restore an older complete copy of the store after one more
+    genuine record was written through the tool's own API. Nothing in the
+    restored copy is forged or out of place: every record, digest, chain
+    link and head the store keeps beside itself is as the store wrote it.
+    The store is simply older than it should be, and the newest record is
+    gone. A head kept anywhere the attacker can restore along with the
+    files (a sidecar, a tip row, a file in the same directory) rolls back
+    with them; only a head held off the store catches this.
+
+    T7 copies one older record over the newest; T9 rolls back the whole
+    store. The two differ in what passes: per-record binding and a stored
+    head stop T7, and neither stops T9."""
+
+    name = "snapshot_rollback"
+    description = ("Restore an older complete copy of the store, taken "
+                   "before the newest genuine record was written.")
+
+    def run(self, adapter: MemoryAdapter):
+        from agmi.attacks.base import AttackResult
+        if not getattr(adapter, "supports_snapshot", False):
+            return AttackResult(self.name, adapter.name, detected=False,
+                                error="adapter does not support a store snapshot",
+                                version=self.version)
+        return super().run(adapter)
+
+    def tamper(self, adapter: MemoryAdapter) -> None:
+        token = adapter.snapshot_store()
+        adapter.append_genuine()
+        self._ctx["grown"] = snapshot(adapter, adapter.read_all_raw())
+        adapter.restore_store(token)
+
+    def check_landed(self, adapter, before, after):
+        grown: list[Snap] = self._ctx["grown"]
+        expect(len(grown) == len(before) + 1,
+               f"append_genuine did not add exactly one record: {len(before)} -> {len(grown)}")
+        expect(same_records(before, grown[:-1]),
+               "appending a genuine record changed the records already stored")
+        expect(len(after) == len(before),
+               f"restore did not bring the store back to {len(before)} records, found {len(after)}")
+        expect(same_records(before, after),
+               "the restored copy differs from the store as it was before the append")
+
+    def detail_on(self, detected: bool) -> str:
+        return ("the store noticed it was older than its last committed state"
+                if detected else
+                "the older copy opened as current; the newest genuine record is gone without an error")
+
+
 ALL_AT_REST_ATTACKS: list[type[Attack]] = [
     TamperAttack,
     TruncateAttack,
@@ -306,3 +355,8 @@ ALL_AT_REST_ATTACKS: list[type[Attack]] = [
     RollbackReplayAttack,
     MetadataTamperAttack,
 ]
+
+#: The eight edits plus T9. The scorecard runs this list; the eight-edit
+#: list stays as the pinned contract until every adapter carries the
+#: snapshot hooks, at which point T9 joins it.
+AT_REST_ATTACKS_WITH_SNAPSHOT: list[type[Attack]] = ALL_AT_REST_ATTACKS + [SnapshotRollbackAttack]
