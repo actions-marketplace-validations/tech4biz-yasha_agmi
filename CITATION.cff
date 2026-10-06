@@ -6,12 +6,15 @@ authors:
     given-names: Yasha
     email: yasha.khandelwal@tech4biz.io
     orcid: "https://orcid.org/0009-0005-2166-4951"
-version: 0.6.0
-date-released: 2026-09-25
+version: 0.6.3
+date-released: 2026-10-06
 identifiers:
   - type: doi
     value: 10.5281/zenodo.22860886
     description: "Concept DOI for the software, resolves to the latest version"
+  - type: doi
+    value: 10.5281/zenodo.23121911
+    description: "Software record for v0.6.2"
   - type: doi
     value: 10.5281/zenodo.22957647
     description: "Software record for v0.6.0"
