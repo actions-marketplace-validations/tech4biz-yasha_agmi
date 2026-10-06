@@ -10,7 +10,7 @@ A conformance test suite that measures whether AI agent memory and checkpoint st
   <a href="https://github.com/tech4biz-yasha/agmi/actions/workflows/scorecard.yml"><img src="https://github.com/tech4biz-yasha/agmi/actions/workflows/scorecard.yml/badge.svg" alt="scorecard"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue.svg" alt="python">
-  <img src="https://img.shields.io/badge/stores%20measured-13-green.svg" alt="stores measured">
+  <img src="https://img.shields.io/badge/stores%20measured-16-green.svg" alt="stores measured">
 </p>
 
 [![Method paper DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22995111.svg)](https://doi.org/10.5281/zenodo.22995111)
@@ -23,7 +23,7 @@ A conformance test suite that measures whether AI agent memory and checkpoint st
 
 ## The result in one table
 
-Fourteen agent memory and checkpoint stores were seeded through their own APIs, edited behind their backs, and asked to read their memory again. The seven that make no integrity claim, all three official LangGraph checkpointers among them, served every edit as genuine. The seven that do make a claim were measured against it, and the table shows exactly where each one holds and where it stops. One of them, the MythologIQ Agent Memory reference runtime, refuses all eight record-level edits on the read path and is the first row to do so.
+Sixteen agent memory and checkpoint stores were seeded through their own APIs, edited behind their backs, and asked to read their memory again. The eight that make no integrity claim, all three official LangGraph checkpointers among them, served every edit as genuine. The eight that do make a claim were measured against it, and the table shows exactly where each one holds and where it stops. One of them, the MythologIQ Agent Memory reference runtime, refuses all eight record-level edits on the read path and is the first row to do so.
 
 The nine edits: T1 content tamper, T2 tail truncation, T3 middle deletion, T4 reordering, T5 forged insertion, T6 cross-context replay, T7 rollback replay, T8 metadata tamper, and T9 snapshot rollback, which restores an older complete copy of the store after one more genuine record was written through the tool's own API. T1 to T8 are the edits proposed as the test method for IETF draft-han-bmwg-agent-security-benchmark metric 5.4.7 and defined in draft-khandelwal-bmwg-agent-memory-integrity. T6, T7 and T9 use only bytes the store itself wrote, in the wrong place or at the wrong time; they are the edits that separate encryption from integrity, and T9 is the one that separates a stored head from an anchored one: a head kept beside the records rolls back with them. T9 is measured where the adapter has the snapshot hooks; a blank T9 cell means not yet measured, not a pass.
 

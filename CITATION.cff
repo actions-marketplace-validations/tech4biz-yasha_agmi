@@ -13,6 +13,9 @@ identifiers:
     value: 10.5281/zenodo.22860886
     description: "Concept DOI for the software, resolves to the latest version"
   - type: doi
+    value: 10.5281/zenodo.23193233
+    description: "Software record for v0.6.3"
+  - type: doi
     value: 10.5281/zenodo.23121911
     description: "Software record for v0.6.2"
   - type: doi
