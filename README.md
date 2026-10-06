@@ -113,6 +113,11 @@ For your own store, write an adapter against `agmi.adapters.base.MemoryAdapter` 
 
 Locally the same command is `agmi-check --adapter module:Class`. Exit 1 means at least one edit was ACCEPTED, exit 2 means nothing could be evaluated (the control cases failed), exit 3 means an edit did not land as intended (an adapter fault, fix it before reading any verdict), exit 0 means every edit was REJECTED or REPORTED. Add `--fail-on none` to record without failing, for example while a fix is in progress. Verdict words follow the method proposed for IETF draft-han-bmwg-agent-security-benchmark metric 5.4.7.
 
+### Who runs it
+
+- memory-blackbox (Lav Kumar Vishwakarma) runs the agmi Action in CI since 0.1.1, after fixing the restart gap this suite reported.
+- MythologIQ's Agent Memory durability Gauntlet pins agmi at 76ddf21 as its accepted external integrity evidence for T1 to T9, reproduced independently in their CI ([#639](https://github.com/MythologIQ-Labs-LLC/agent-memory/issues/639), [#650](https://github.com/MythologIQ-Labs-LLC/agent-memory/pull/650)).
+
 ## Contents
 
 1. [Why this exists](#why-this-exists)
@@ -683,7 +688,7 @@ for IETF draft-han-bmwg-agent-security-benchmark metric 5.4.7
 | 0.6.0 | Eight at-rest edits T1 to T8 (adds cross-context replay, rollback replay, metadata tamper) with control cases and read/audit detection points, matching the proposed 5.4.7 method | done |
 | 0.6.1 | Control C3, the landed guard, on every edit; the defended rows (acrf-memory-guard, langgraph-ledger, memory-blackbox, Atelya Attest, CONTINUUM) and the LangGraph Postgres and Redis checkpointers; findings filed with LangChain, OpenAI and LlamaIndex; method text in IETF BMWG and OWASP AIMM | done |
 | 0.6.2 | memory-blackbox restart row, before and after the maintainer's fix (0.1.1), the first store fix driven by the suite; every scorecard row links to the code it measures | done |
-| 0.6.3 | T9 snapshot rollback (whole-store restore after a genuine append) with its own landed control and a witnessed head on the reference store; measured on the three LangGraph checkpointers, OpenAI Agents SDK, langgraph-ledger, the OpenFang model and the Agent Memory reference runtime; the Agent Memory row, measured for its maintainers' qualification of agmi as external integrity evidence (#639, under their review) | in main, release 0.6.3 next |
+| 0.6.3 | T9 snapshot rollback with its own landed control, measured on every at-rest row; the Agent Memory row, accepted by its maintainers as external integrity evidence (#639, #650); the CrewAI row; the memory agent's storage-side hunt and composition engine, which found and closed a truncate-then-write launder in the reference store | done |
 | 0.7 | Hosted stores measured through their front door only: AWS Bedrock AgentCore Memory, Google Vertex AI Memory Bank, Zep, Letta Cloud; Graphiti; the inspeximus T6 cells flipped to real verdicts when its maintainer's fix lands | next |
 | Phase 3 | Live targets over HTTP (MCP memory servers, deployed LangGraph and Letta) behind the authorisation gate; obedience oracle that proves the agent acted on the poison; ingestion marking measured on each framework | planned |
 | Phase 4 | Memory agent driving content-only attacks through a real model, with the same proof discipline | planned |
