@@ -101,3 +101,17 @@ Live HTTP targets, an obedience oracle (a canary action the model takes only if
 it believed the poison), and a model in the loop proposing new payloads are the
 next tier and are not part of B2/B3. They are listed in the roadmap, not built
 against this note.
+
+## Known overlap (6 October 2026)
+
+The engine checks a bare `edit:X` through the store's live handle and treats `edit:X -> restart`
+as a two-move sequence. The scorecard's single attack already includes the restart, so on a
+store that serves an edit only after a reopen (inspeximus with the attacker holding the config
+home: tail truncation) the engine reports `edit:truncate -> restart` as composite-only while the
+hunt reports the same truncation as a single finding. That is one result shown twice, not a new
+one. A later revision should fold the restart into the single-move baseline for edits so the
+composite list only carries sequences the hunt cannot reach.
+
+Running the engine on inspeximus also caught a false positive in agmi's own adapter: its genuine
+write derived its key from the on-disk record count, so under a live handle after a truncation it
+superseded a seeded record and the engine read that as served tampering. The key is now a counter.

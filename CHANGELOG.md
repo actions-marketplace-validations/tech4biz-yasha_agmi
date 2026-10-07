@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Memory agent: the three inspeximus positions the scorecard measures (`inspeximus-default`, `inspeximus-rcpt+dir`, `inspeximus-rcpt+dir+home`) are now reachable from the CLI for `--families at-rest` and `--compose`. The hunt reproduces the scorecard (nine served with receipts off; none with receipts and the directory; tail truncation and snapshot rollback with the config home held).
+- inspeximus adapter: a genuine write now uses a counter for its key instead of the on-disk record count. Under a live handle after an on-disk truncation the old key collided with a seeded record and superseded it, which the composition engine read as served tampering; it was a false positive in agmi, not a finding against inspeximus. Pinned in `tests/test_at_rest_hunt.py`. The `edit -> restart` overlap with the hunt's single attacks is noted in `docs/agent/DESIGN.md` as a follow-up.
+
 ## 0.6.3 (6 October 2026)
 
 - Ninth edit, T9 snapshot rollback: restore an older complete copy of everything the store keeps on disk after one more genuine record was written through the tool's own API. Every byte in the restored copy is genuine; only the newest record is missing. Its own landed control (append added exactly one record; restore brought the store back to the pre-append count). New adapter hooks `snapshot_store`, `restore_store`, `append_genuine`, with `supports_snapshot`. Scorecard column `snapRb`; new level L4, "head anchored off the store". Attack in `agmi/attacks/at_rest.py` (`SnapshotRollbackAttack`), pinned in `tests/test_snapshot_rollback.py`.

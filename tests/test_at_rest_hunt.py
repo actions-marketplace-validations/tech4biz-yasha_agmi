@@ -31,3 +31,25 @@ def test_langgraph_sqlite_serves_every_edit_as_a_finding():
 def test_authorisation_runs_and_is_reported():
     authz, _findings = hunt_at_rest(LangGraphSqliteAdapter())
     assert "caller" in authz or "library" in authz
+
+
+def test_inspeximus_targets_resolve_to_the_scorecard_positions():
+    """The three inspeximus rows the scorecard measures are reachable by name."""
+    from agmi.agent.at_rest_hunt import at_rest_target
+    from agmi.adapters.inspeximus_rows import (
+        InspeximusDefaultAdapter, InspeximusRowsSidecarAdapter,
+        InspeximusRowsSidecarHeadAdapter)
+    assert type(at_rest_target("inspeximus-default")) is InspeximusDefaultAdapter
+    assert type(at_rest_target("inspeximus-rcpt+dir")) is InspeximusRowsSidecarAdapter
+    assert type(at_rest_target("inspeximus-rcpt+dir+home")) is InspeximusRowsSidecarHeadAdapter
+
+
+def test_inspeximus_genuine_write_never_collides_with_a_seeded_key():
+    """A genuine write under a live handle after an on-disk truncation must not
+    supersede a seeded record; that would make a harmless write look like served
+    tampering to the composition engine (false positive found 6 Oct 2026)."""
+    from agmi.agent.compose import _lands
+    from agmi.adapters.inspeximus_rows import InspeximusRowsSidecarAdapter
+    landed, detail = _lands(lambda: InspeximusRowsSidecarAdapter(), ["edit:truncate", "write"])
+    assert landed is False
+    assert "intact" in detail
