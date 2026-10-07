@@ -111,7 +111,10 @@ def at_rest_target(name: str) -> MemoryAdapter:
     if name == "inspeximus-rcpt+dir+home":
         from agmi.adapters.inspeximus_rows import InspeximusRowsSidecarHeadAdapter
         return InspeximusRowsSidecarHeadAdapter()
+    if name == "vertex-memory-bank":
+        from agmi.adapters.vertex_memory_bank import VertexMemoryBankAdapter
+        return VertexMemoryBankAdapter()
     raise SystemExit(
         f"unknown at-rest target {name!r}; choose one of: reference, "
         f"langgraph-sqlite, llamaindex, crewai, openai-agents, inspeximus-default, "
-        f"inspeximus-rcpt+dir, inspeximus-rcpt+dir+home")
+        f"inspeximus-rcpt+dir, inspeximus-rcpt+dir+home, vertex-memory-bank")
