@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New row (managed store): Vertex AI Agent Engine Memory Bank, measured through the data-plane API as the attacker (a principal with roles/aiplatform.user outside the agent's session: patch, delete, create). Reorder and snapshot rollback are not applicable to a managed store and score n/a. Adapter `agmi/adapters/vertex_memory_bank.py`, extra `vertex`, row and hunt target gated on `AGMI_GCP_PROJECT`, pinned in `tests/test_vertex_memory_bank.py`.
 - Memory agent: the three inspeximus positions the scorecard measures (`inspeximus-default`, `inspeximus-rcpt+dir`, `inspeximus-rcpt+dir+home`) are now reachable from the CLI for `--families at-rest` and `--compose`. The hunt reproduces the scorecard (nine served with receipts off; none with receipts and the directory; tail truncation and snapshot rollback with the config home held).
 - inspeximus adapter: a genuine write now uses a counter for its key instead of the on-disk record count. Under a live handle after an on-disk truncation the old key collided with a seeded record and superseded it, which the composition engine read as served tampering; it was a false positive in agmi, not a finding against inspeximus. Pinned in `tests/test_at_rest_hunt.py`. The `edit -> restart` overlap with the hunt's single attacks is noted in `docs/agent/DESIGN.md` as a follow-up.
 

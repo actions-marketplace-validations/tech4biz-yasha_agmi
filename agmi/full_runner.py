@@ -157,6 +157,13 @@ def full_scorecard() -> str:
     except ImportError:
         LangGraphPostgresAdapter = None  # noqa: N806
     try:
+        import vertexai  # noqa: F401
+        from agmi.adapters.vertex_memory_bank import VertexMemoryBankAdapter, gcp_project
+        if not gcp_project():
+            VertexMemoryBankAdapter = None  # noqa: N806 - row only with AGMI_GCP_PROJECT
+    except ImportError:
+        VertexMemoryBankAdapter = None  # noqa: N806
+    try:
         import langgraph.checkpoint.redis  # noqa: F401
         from agmi.adapters.langgraph_redis import LangGraphRedisAdapter, redis_uri
         if not redis_uri():
@@ -231,6 +238,7 @@ def full_scorecard() -> str:
         *([("openai-agents-sqlite-session", openai_session, None)] if openai_session else []),
         *([("llamaindex-memory-sqlite", llamaindex_memory, None)] if llamaindex_memory else []),
         *([("crewai-ltm-lancedb", crewai_ltm, None)] if crewai_ltm else []),
+        *([("vertex-memory-bank", VertexMemoryBankAdapter(), None)] if VertexMemoryBankAdapter else []),
         *([("langgraph-sqlite-store", None, lg_store)] if lg_store else []),
         *([letta_row] if letta_row else []),
         *([("letta-archival", None, letta_archival)] if letta_archival else []),
