@@ -69,6 +69,8 @@ ROW_NAMES = {
     "langgraph-sqlite-store": ("LangGraph SqliteStore", "langgraph-checkpoint-sqlite 3.1.1"),
     "openai-agents-sqlite-session": ("OpenAI Agents SDK SQLiteSession", "openai-agents 0.20.0"),
     "llamaindex-memory-sqlite": ("LlamaIndex Memory, SQLAlchemy chat store", "llama-index-core 0.14.24"),
+    "crewai-ltm-lancedb": ("CrewAI long-term memory, LanceDB dataset", "crewai 1.15.23"),
+    "vertex-memory-bank": ("Vertex AI Agent Engine Memory Bank, managed store, edits through the data-plane API", "google-cloud-aiplatform 2.4.0"),
     "acrf-memory-guard": ("acrf-memory-guard, per-entry HMAC over a JSON store", "acrf-memory-guard 0.1.0"),
     "agent-memory": ("Agent Memory reference runtime, SQLite canonical substrate, bucketed row digests, fail-closed open", "agent-memory-reference 0.2.0 (f2aef57)"),
     "langgraph-ledger": ("langgraph-ledger over SqliteSaver, hash-chained ledger, verify_thread audit", "langgraph-ledger 0.3.0"),
@@ -78,6 +80,8 @@ ROW_NAMES = {
     "atelya-attest-chain+anchor": ("Atelya Attest, keyed hash chain plus anchored head, verify and consistency audit", "atelya-attest 0.1.1"),
     "continuum-events": ("CONTINUUM event log, hash chain, verify_events audit", "continuum-agent 0.1.0"),
     "continuum-events+attest": ("CONTINUUM event log, hash chain plus Ed25519-signed head, attest-verify audit", "continuum-agent 0.1.0"),
+    "atmem-chain": ("AtMem, hash-chained audit log, verify() audit", "atmem 2.3.7"),
+    "atmem-chain+checkpoint": ("AtMem, hash-chained audit log plus externally anchored checkpoint, verify() audit", "atmem 2.3.7"),
     "letta-block-history": ("Letta block checkpoint history", "letta 0.16.8"),
     "letta-archival": ("Letta archival memory", "letta 0.16.8"),
     "mem0-qdrant-local": ("Mem0 local Qdrant store", "mem0ai 2.0.20"),
@@ -99,6 +103,8 @@ ROW_REPOS = {
     "langgraph-sqlite-store": "https://github.com/langchain-ai/langgraph/tree/main/libs/checkpoint-sqlite",
     "openai-agents-sqlite-session": "https://github.com/openai/openai-agents-python",
     "llamaindex-memory-sqlite": "https://github.com/run-llama/llama_index",
+    "crewai-ltm-lancedb": "https://github.com/crewAIInc/crewAI",
+    "vertex-memory-bank": "https://docs.cloud.google.com/agent-builder/agent-engine/memory-bank/overview",
     "acrf-memory-guard": "https://github.com/kannasekar-alt/ACRF",
     "agent-memory": "https://github.com/MythologIQ-Labs-LLC/agent-memory",
     "langgraph-ledger": "https://pypi.org/project/langgraph-ledger/",
@@ -108,6 +114,8 @@ ROW_REPOS = {
     "atelya-attest-chain+anchor": "https://github.com/RonaldSit/atelya",
     "continuum-events": "https://github.com/Cyrax321/CONTINUUM",
     "continuum-events+attest": "https://github.com/Cyrax321/CONTINUUM",
+    "atmem-chain": "https://github.com/aetna000/atmem",
+    "atmem-chain+checkpoint": "https://github.com/aetna000/atmem",
     "letta-block-history": "https://github.com/letta-ai/letta",
     "letta-archival": "https://github.com/letta-ai/letta",
     "mem0-qdrant-local": "https://github.com/mem0ai/mem0",
@@ -124,6 +132,15 @@ def rowver(label, ver):
     return f'<a class="rowver" href="{esc(url)}" rel="noopener">{esc(ver)}</a>'
 
 FINDINGS = [
+    ("A managed cloud store joins the table: Vertex AI Memory Bank serves seven edits, two have no API", "2026-10-07",
+     "The first managed store on the board. There is no disk, so the attacker is a principal holding roles/aiplatform.user on the project outside the agent's session, editing through memories.patch, memories.delete and memories.create. Content tamper, truncation, middle delete, forgery, cross-context replay, rollback replay and metadata tamper are all served as genuine on the next retrieve. Reorder and whole-store rollback score n/a: the API cannot set create_time, and a managed store exposes no snapshot or restore of its own state. Memory Bank records a revision for every change to a memory's fact, so an edit is discoverable by an investigator afterwards; nothing on the read path consults it. Google makes no integrity claim for the store, so this is a reference measurement rather than a vulnerability: the same shape as the frameworks, now with a cloud provider in the same table.",
+     "https://github.com/tech4biz-yasha/agmi/blob/main/agmi/adapters/vertex_memory_bank.py"),
+    ("First row to refuse all eight record-level edits on the read path: the Agent Memory reference runtime", "2026-10-06",
+     "Every canonical SQLite row is hashed into a bucketed Merkle digest, the governance log is chained, and open() fails closed on any mismatch, so T1 to T8 are refused before the agent reads anything. T9, the rollback of the whole store to an older genuine copy, is served: the generation anchor sits in a sidecar beside the database, so the restored copy opens as current with the newest memory gone. The maintainers accepted the row as external integrity evidence for T1 to T9 and pin the suite in their own CI (#639, #650).",
+     "https://github.com/MythologIQ-Labs-LLC/agent-memory/issues/639"),
+    ("T9, a rollback of the whole store that every digest still passes", "2026-10-06",
+     "Restore an older complete copy of everything the store keeps on disk, taken before one more genuine record was written through the tool's own API. Every byte in the restored copy is genuine; only the newest record is missing. Served by the three LangGraph checkpointers, OpenAI Agents SDK, LlamaIndex, CrewAI, Letta, Mem0, acrf-memory-guard, the chain-only Atelya and CONTINUUM rows, the OpenFang model, the Agent Memory reference runtime, inspeximus with receipts off or with the config home in the attacker's hands, and memory-blackbox restarted. Reported only by the rows that hold a head off the store: langgraph-ledger, Atelya anchored, CONTINUUM attested, inspeximus with receipts on and the config home out of reach, and memory-blackbox with the watcher alive. The composition engine shipped in the same release found that the reference store's own genuine write re-anchored its witness to a truncated chain, so truncate-then-write laundered a deletion; the witness now advances only forward.",
+     "https://github.com/tech4biz-yasha/agmi/blob/main/CHANGELOG.md"),
     ("A vendor fix driven by the suite: memory-blackbox restart gap, reported and fixed in a day", "2026-10-02",
      "With the agent process alive, the memory-blackbox memory.md watcher reports all eight edits on scan. With the agent restarted between the edit and the scan, 0.1.0 served all eight: baseline() seeded the watcher from the file bytes, so an edit made while the agent was down became the trusted state. The maintainer was told privately under the project's security policy on the morning of 2 October; the restart row was held back from the scorecard meanwhile. The fix shipped as 0.1.1 the same day: baseline() now takes the ledger's last write for each watched file as the trusted state, a file the ledger has never seen is recorded once so a cold start reads differently from a mismatch, and the maintainer ran the suite against the fix before tagging. Re-measured on 0.1.1, both rows report all eight. The repo now has private vulnerability reporting switched on and credits the report in its release notes and SECURITY.md.",
      "https://github.com/lavkumarv/memory-blackbox/pull/31"),
@@ -497,9 +514,9 @@ def build():
     global d_date, d_platform
     d, rows = load()
     d_date, d_platform = d["date"], d["platform"]
-    at_rest_keys = [k for k in ["openfang(model,fixed)", "langgraph-sqlite", "langgraph-postgres", "langgraph-redis", "openai-agents-sqlite-session", "llamaindex-memory-sqlite", "letta-block-history",
+    at_rest_keys = [k for k in ["openfang(model,fixed)", "langgraph-sqlite", "langgraph-postgres", "langgraph-redis", "openai-agents-sqlite-session", "llamaindex-memory-sqlite", "crewai-ltm-lancedb", "vertex-memory-bank", "letta-block-history",
                                 "mem0-qdrant-local", "inspeximus-default", "inspeximus-rcpt+dir",
-                                "inspeximus-rcpt+dir+home", "langgraph-ledger", "memory-blackbox-md", "memory-blackbox-md+restart", "atelya-attest-chain", "atelya-attest-chain+anchor", "continuum-events", "continuum-events+attest", "acrf-memory-guard", "agent-memory"] if k in rows]
+                                "inspeximus-rcpt+dir+home", "langgraph-ledger", "memory-blackbox-md", "memory-blackbox-md+restart", "atelya-attest-chain", "atelya-attest-chain+anchor", "continuum-events", "continuum-events+attest", "atmem-chain", "atmem-chain+checkpoint", "acrf-memory-guard", "agent-memory"] if k in rows]
     fd_keys = [k for k in ["langgraph-sqlite-store", "letta-archival", "mem0-qdrant-local",
                            "inspeximus-default", "inspeximus-defended", "inspeximus-defended-key",
                            "naive-mem(scoped)", "naive-mem(unscoped)", "reference-defended(model)"] if k in rows]
@@ -507,7 +524,7 @@ def build():
     fd_cols = [(a, n, n) for a, n, _, _ in FRONT_DOOR]
 
     # count the headline
-    all8 = [k for k in ["langgraph-sqlite", "openai-agents-sqlite-session", "llamaindex-memory-sqlite", "letta-block-history", "mem0-qdrant-local", "inspeximus-default"]
+    all8 = [k for k in ["langgraph-sqlite", "langgraph-postgres", "langgraph-redis", "openai-agents-sqlite-session", "llamaindex-memory-sqlite", "crewai-ltm-lancedb", "vertex-memory-bank", "letta-block-history", "mem0-qdrant-local"]
             if k in rows and all(rows[k]["cells"].get(a, {}).get("verdict", "n/a") in ("accepted", "n/a") for a, *_ in AT_REST)
             and any(rows[k]["cells"].get(a, {}).get("verdict") == "accepted" for a, *_ in AT_REST)]
 
@@ -520,7 +537,7 @@ def build():
   <div class="hero-text">
     <p class="lede">Edit an AI agent's memory behind its back. Restart the agent. Ask it what it remembers.</p>
     <h1>{len(all8)} of {len(all8)} memory stores serve the edit as genuine.</h1>
-    <p class="sub">LangGraph, Letta, Mem0 and inspeximus, measured against eight storage-level edits and six front-door attacks. Real libraries, pinned versions, reproducible in under a minute, re-run in CI on every change.</p>
+    <p class="sub">LangGraph, OpenAI Agents SDK, LlamaIndex, CrewAI, Letta, Mem0, inspeximus and Google's Vertex AI Memory Bank, measured against nine storage-level edits and six front-door attacks. Real libraries, pinned versions, reproducible in under a minute, re-run in CI on every change.</p>
     <p class="cta"><a class="btn" href="scorecard.html">See the scorecard</a> <a class="btn-quiet" href="run.html">Run it on your store</a></p>
   </div>
   <figure class="hero-fig" aria-label="Animation: a genuine record from another user is copied over this user's newest record, and the read path returns it as genuine">
@@ -555,12 +572,12 @@ def build():
   <h2>How to read this site</h2>
   <div class="routes">
     <a href="scorecard.html"><strong>Five minutes.</strong> The two scorecards. Every cell is a measurement; click one to see what the tool actually said.</a>
-    <a href="edits.html"><strong>Half an hour.</strong> The fourteen attacks, one figure and one paragraph each, and why each one matters.</a>
-    <a href="run.html"><strong>Hands on.</strong> Run the eight edits against your own store in one CI step, or reproduce any cell on a laptop.</a>
+    <a href="edits.html"><strong>Half an hour.</strong> The fifteen attacks, one figure and one paragraph each, and why each one matters.</a>
+    <a href="run.html"><strong>Hands on.</strong> Run the nine edits against your own store in one CI step, or reproduce any cell on a laptop.</a>
   </div>
 </section>
 <section class="part">
-  <h2>At rest: eight edits, {len(at_rest_keys)} stores</h2>
+  <h2>At rest: nine edits, {len(at_rest_keys)} rows</h2>
   <p>The attacker can write to the medium that holds the store (a database file, a table, a vector collection) but holds none of the tool's keys. Each edit is applied once, the tool is restarted, and its own read path is asked for the memory. <em>Accepted</em> means the tool served the edit as genuine. <em>Rejected</em> means it refused on read. <em>Reported</em> means its audit named the problem, after the agent had already resumed.</p>
   {matrix(d, rows, at_rest_keys, ar_cols, "atrest")}
   <p class="note">The edits, verdict words and control cases are the ones proposed as the test method for IETF draft-han-bmwg-agent-security-benchmark metric 5.4.7 (<a href="https://mailarchive.ietf.org/arch/browse/bmwg/">bmwg list, 24 September 2026</a>). T6 and T7 use only bytes the store itself wrote, in the wrong place; they are the edits that separate encryption from integrity. See <a href="method.html">Method</a>.</p>
@@ -592,7 +609,7 @@ def build():
   </ul>
 </section>'''
     (OUT / "index.html").write_text(page("Agent Memory Integrity: do AI agent memory stores notice when they are tampered with?",
-        "agmi measures whether AI agent memory and checkpoint stores notice tampering. Eight storage-level edits and six front-door attacks, measured on LangGraph, Letta, Mem0 and inspeximus.",
+        "agmi measures whether AI agent memory and checkpoint stores notice tampering. Nine storage-level edits and six front-door attacks, measured on seventeen stores, from LangGraph to Google's Vertex AI Memory Bank.",
         "index.html", hero, "index.html"))
 
     # ---- scorecard
@@ -627,10 +644,10 @@ def build():
   <h2>Per target, in full</h2>
   {per_target(at_rest_keys + [k for k in fd_keys if k not in at_rest_keys])}
 </section>'''
-    (OUT / "scorecard.html").write_text(page("Scorecard, Agent Memory Integrity", "Measured verdicts for LangGraph, Letta, Mem0 and inspeximus on eight at-rest edits and six front-door attacks.", "scorecard.html", sc, "scorecard.html"))
+    (OUT / "scorecard.html").write_text(page("Scorecard, Agent Memory Integrity", "Measured verdicts for seventeen memory stores, LangGraph to Google's Vertex AI Memory Bank, on nine at-rest edits and six front-door attacks.", "scorecard.html", sc, "scorecard.html"))
 
     # ---- edits
-    ed = ('<section class="part"><h1>The edits and attacks</h1><p class="lede">Fourteen ways to change what an agent remembers. Eight need access to the store and are the at-rest edits, T1 to T8. Six only need to talk to the agent and are the front-door attacks. Each one below has a story, a picture of what changes, what the agent reads back, what stops it, and which stores stop it today.</p>'
+    ed = ('<section class="part"><h1>The edits and attacks</h1><p class="lede">Fifteen ways to change what an agent remembers. Nine need access to the store and are the at-rest edits, T1 to T9. Six only need to talk to the agent and are the front-door attacks. Each one below has a story, a picture of what changes, what the agent reads back, what stops it, and which stores stop it today.</p>'
           '<div class="legend"><span><i class="lg lg-n"></i>genuine record</span><span><i class="lg lg-x"></i>bytes changed</span><span><i class="lg lg-g"></i>removed</span><span><i class="lg lg-m"></i>genuine bytes moved</span><span><i class="lg lg-a"></i>attacker-authored</span></div>'
           + DIAG_TIMELINE + '<h2>At rest: the attacker can write to the store</h2>')
     for a, t, n, what, why in AT_REST:
@@ -659,7 +676,7 @@ def build():
             today += f'<dt class="v-acc-t">surfaced</dt><dd>{esc(", ".join(g["surfaced"]))}</dd>'
         ed += f'<article class="edit"><h3>{esc(n)}</h3><p>{esc(what)}</p><p class="why">{esc(why)}</p><dl class="today">{today}</dl></article>'
     ed += '</div><p class="note">Every attack carries a version, printed by the runner and stored with each result, so cells from different reports are never compared as if the attack had stood still. Front-door attacks also run as content-evasion mutations: reworded, look-alike glyphs, split across records, diluted with filler. A positive control runs before every verdict: the victim reads back a genuine memory in the same store state, or the cell is not evaluable.</p></section>'
-    (OUT / "edits.html").write_text(page("The edits and attacks, Agent Memory Integrity", "Eight storage-level edits and six front-door attacks against AI agent memory: the story, what changes, what the agent reads back, what stops it, and which stores stop it today.", "edits.html", ed, "edits.html"))
+    (OUT / "edits.html").write_text(page("The edits and attacks, Agent Memory Integrity", "Nine storage-level edits and six front-door attacks against AI agent memory: the story, what changes, what the agent reads back, what stops it, and which stores stop it today.", "edits.html", ed, "edits.html"))
 
     # ---- method
     me = f'''<section class="part"><h1>Method</h1>
@@ -704,7 +721,7 @@ agmi-check --adapter agmi.adapters.langgraph_sqlite:LangGraphSqliteAdapter</code
 <h2>Submit a row</h2>
 <p>Maintainers of a memory store can open a pull request with an adapter and their measured row. The defended inspeximus rows on the scorecard came in this way from the tool's own maintainer, with the two control cases as tests. Contributions follow <a href="https://github.com/tech4biz-yasha/agmi/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
 </section>'''
-    (OUT / "run.html").write_text(page("Run it, Agent Memory Integrity", "Run the eight at-rest edits against your memory store in one CI step, or on a laptop in under a minute.", "run.html", ru, "run.html"))
+    (OUT / "run.html").write_text(page("Run it, Agent Memory Integrity", "Run the nine at-rest edits against your memory store in one CI step, or on a laptop in under a minute.", "run.html", ru, "run.html"))
 
     # ---- cite
     ci = f'''<section class="part"><h1>Cite</h1>
@@ -754,7 +771,10 @@ Zenodo. https://doi.org/10.5281/zenodo.22860886</code></pre>
         ("0.6.0", "Eight at-rest edits T1 to T8 with control cases and read/audit detection points, matching the proposed IETF 5.4.7 method; agmi-check and the GitHub Action", "done"),
         ("0.6.1", "Control C3, the landed guard: every edit proves it landed as intended before a verdict; OpenAI Agents SDK and LlamaIndex rows; companion Internet-Draft filed", "done"),
         ("0.6.2", "memory-blackbox restart row, before and after the maintainer's fix (0.1.1); every scorecard row links to the code it measures", "done"),
-        ("Phase 3", "Live targets over HTTP (MCP memory servers, deployed LangGraph and Letta) behind the authorisation gate; obedience oracle that proves the agent acted on the poison; ingestion marking measured per framework", "next"),
+        ("0.6.3", "T9 snapshot rollback with its own landed control, measured on every at-rest row; the Agent Memory reference runtime row, accepted by its maintainers as external integrity evidence (#639, #650); the CrewAI row; the memory agent's storage-side hunt and composition engine, which found and closed a truncate-then-write launder in the reference store", "done"),
+        ("0.6.4", "Managed stores, measured through the data-plane API because a managed store has no other door: Google Vertex AI Memory Bank, the first on the board, done; AWS Bedrock AgentCore Memory next", "next"),
+        ("0.7", "Hosted stores measured through their front door only: Zep, Letta Cloud; Graphiti; the inspeximus T6 cells flipped to real verdicts when its maintainer's fix lands", "planned"),
+        ("Phase 3", "Live targets over HTTP (MCP memory servers, deployed LangGraph and Letta) behind the authorisation gate; obedience oracle that proves the agent acted on the poison; ingestion marking measured per framework", "planned"),
         ("Phase 4", "Memory agent driving content-only attacks through a real model, same proof discipline", "planned"),
         ("0.9", "Deserialization safety, and a reference integrity layer (a hash chain over checkpoint ids) offered upstream as an optional mode", "planned"),
         ("1.0", "Stable adapter interface, published conformance levels, vendor badges, monthly report cadence; hosted runs through AuditTrax Labs, the open benchmark free", "planned"),
@@ -774,13 +794,16 @@ Zenodo. https://doi.org/10.5281/zenodo.22860886</code></pre>
 </dl>
 <h2>Stores measured</h2>
 <dl class="eco">
-<dt>LangGraph</dt><dd>SqliteSaver and SqliteStore. Issue <a href="https://github.com/langchain-ai/langgraph/issues/9004">#9004</a> (encrypted checkpointer replay) was raised from these measurements and a community fix verified with the suite. Its remaining gap, head deletion, is <a href="https://github.com/langchain-ai/langgraph/issues/9099">#9099</a>; a community reference implementation of a caller-supplied head anchor was verified with the suite on the sync and async paths, and the two fixes measured together close both.</dd>
+<dt>LangGraph</dt><dd>SqliteSaver, PostgresSaver, RedisSaver and SqliteStore. Issue <a href="https://github.com/langchain-ai/langgraph/issues/9004">#9004</a> (encrypted checkpointer replay) was raised from these measurements and a community fix verified with the suite. Its remaining gap, head deletion, is <a href="https://github.com/langchain-ai/langgraph/issues/9099">#9099</a>; a community reference implementation of a caller-supplied head anchor was verified with the suite on the sync and async paths, and the two fixes measured together close both.</dd>
 <dt>OpenAI Agents SDK</dt><dd>SQLiteSession. All eight edits accepted; <a href="https://github.com/openai/openai-agents-python/issues/5176">#5176</a> was closed with a documentation change stating the session store trusts its storage.</dd>
+<dt>CrewAI</dt><dd>Long-term memory on the LanceDB dataset it moved to in 1.15. All nine edits served; LanceDB versioning only delays an edit until the next reopen.</dd>
+<dt>Vertex AI Memory Bank</dt><dd>Google's managed store, the first on the board, measured through the data-plane API with the attacker a principal holding roles/aiplatform.user outside the agent's session. Seven edits served; reorder and whole-store rollback have no API and score n/a. A revision is kept per change and readable on audit; the read path does not consult it.</dd>
 <dt>LlamaIndex</dt><dd>Memory on the SQLAlchemy chat store. All eight edits accepted; <a href="https://github.com/run-llama/llama_index/issues/23246">#23246</a> is open, with a community documentation note in review.</dd>
 <dt>langgraph-ledger</dt><dd>A hash-chained JSONL ledger beside any LangGraph checkpointer, with <code>verify_thread()</code> re-hashing every logged checkpoint against the store. Reports a changed, removed, swapped, cross-thread or rolled-back checkpoint on audit; serves a forged checkpoint the ledger never logged (it becomes the head on resume and the audit does not look for it) and a metadata edit (the digest covers the checkpoint, not its metadata). The read path is the inner checkpointer, unchanged.</dd>
 <dt>memory-blackbox</dt><dd>A signed, hash-chained provenance ledger with a watcher for memory files such as MEMORY.md. Measured as two rows: with the agent process alive across the edit, every one of the eight edits changes the file's digest and the next scan records it as an out-of-band write; with the agent restarted between the edit and the scan, 0.1.0 served all eight because the new process baselined from the file. Reported privately and fixed the same day in 0.1.1 (<a href="https://github.com/lavkumarv/memory-blackbox/pull/31" rel="noopener">PR #31</a>): the ledger's last write is now the baseline, and both rows report all eight. The first fix in a store driven by the suite; the maintainer runs the agmi Action in CI. The ledger itself is out of the suite's scope and was not edited.</dd>
 <dt>Atelya Attest</dt><dd>A keyed hash chain over the agent's memory op-log, with an optional head checkpoint in a ledger kept under separate control. Measured as two rows. The chain alone reports a changed, deleted, swapped, forged, cross-context or rolled-back entry and a relabelled one, and serves tail truncation, since a shorter chain is still a valid chain. With the anchored head, the truncation is reported too: all eight. The README says exactly this, and the measurement agrees.</dd>
 <dt>CONTINUUM</dt><dd>A hash-chained, append-only event log an agent recovers from, with <code>verify_events()</code> naming each violation by kind and sequence, and <code>continuum attest</code> signing the chain head. Measured as two rows: the chain alone reports seven of eight and serves tail truncation; with the signed head and the check <code>attest-verify</code> performs, all eight. The second package whose README boundary and measurement agree.</dd>
+<dt>AtMem</dt><dd>Auditable memory engine on one SQLite file with a hash-chained audit log and an externally anchored checkpoint. Measured as two rows on 2.3.7: the chain alone, and the chain with the checkpoint kept outside the store. The chain covers the audit log, not the records the agent reads, so all eight record-level edits are served on both rows and only the whole-store rollback is reported, by the checkpoint. Every record's creation event already carries its content digest; verify() does not compare it.</dd>
 <dt>agent-memory</dt><dd>The MythologIQ Agent Memory reference runtime (Apache-2.0, installed from the repository at commit f2aef57). Every canonical SQLite row is hashed into a bucketed Merkle digest, the governance log is chained, and a sidecar beside the database binds the configuration to the last committed generation. <code>open()</code> fails closed on any mismatch, and the agent cannot read a fact without <code>open()</code>, so all eight edits are refused on the read path. Two things the eight do not measure, recorded in the pinned tests: the digests are unkeyed SHA-256, so an attacker who recomputes them is not caught by the digests alone; and a rollback of the whole state directory, database and sidecar together, is served as genuine, because the generation anchor sits beside the store it anchors. The second is the stale-snapshot case the Agent Memory maintainers' own durability work (#571) names, and the shape of the ninth edit planned for the suite.</dd>
 <dt>acrf-memory-guard</dt><dd>Per-entry HMAC checked on read (the ACRF-04 pattern). The first product on the scorecard that claims tamper evidence: refuses a changed, forged or relabelled entry on the read path, and serves a missing, swapped, cross-user or rolled-back genuine entry, since the signature covers one entry's bytes and not its slot. Its own README says rollback is out of scope; the measurement agrees and adds the other four.</dd>
 <dt>Letta</dt><dd>Block checkpoint history and archival memory.</dd>
@@ -849,7 +872,7 @@ python -m agmi.agent --target mem0 --embedder minilm --json</code></pre>
 Version {VERSION}, measured {d_date}. Source: https://github.com/tech4biz-yasha/agmi
 Method text proposed for IETF draft-han-bmwg-agent-security-benchmark metric 5.4.7.
 
-## At rest (eight storage-level edits, attacker has store access, no keys)
+## At rest (nine storage-level edits, attacker has store access, no keys)
 """ + "\n".join(f"- {ROW_NAMES.get(k,(k,''))[0]} ({ROW_NAMES.get(k,(k,''))[1]}): " + ", ".join(f"{t} {rows[k]['cells'].get(a, {}).get('verdict', 'n/a')}" for a,t,*_ in AT_REST) for k in at_rest_keys) + """
 
 ## Front door (six attacks through the tool's own write path)
@@ -874,6 +897,7 @@ Method text proposed for IETF draft-han-bmwg-agent-security-benchmark metric 5.4
 - LlamaIndex: https://github.com/run-llama/llama_index/issues/23246, all eight edits accepted on Memory; raised by the author; a community documentation note (PR 23312) is in review and the issue stays open for an integrity option.
 - inspeximus: five rows; the two defended trust-root rows were contributed by the maintainer (DanceNitra) and reproduced independently. The maintainer also found that the suite's T6 edit was a no-op on the inspeximus and Mem0 rows (https://github.com/tech4biz-yasha/agmi/issues/5); the earlier claim that a receipt does not bind the owning user is withdrawn, and control C3 (every edit must land as intended, or the cell reads error) was added as a result.
 - OpenFang: a forward-only hash chain misses truncation; persisting the tip closes it. The first result the suite produced and the origin of its reference model.
+- Vertex AI Memory Bank: Google's managed store, the first on the board; seven edits served through the data-plane API (patch, delete, create by a principal with roles/aiplatform.user), reorder and whole-store rollback n/a; revisions are kept per change and readable on audit, not on the read path.
 - OWASP: the front-door attacks map to the agentic security initiative's memory and context poisoning category (ASI06).
 
 ## Author

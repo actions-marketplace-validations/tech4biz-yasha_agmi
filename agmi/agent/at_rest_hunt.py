@@ -114,7 +114,16 @@ def at_rest_target(name: str) -> MemoryAdapter:
     if name == "vertex-memory-bank":
         from agmi.adapters.vertex_memory_bank import VertexMemoryBankAdapter
         return VertexMemoryBankAdapter()
+    # AtMem in the two positions the scorecard measures: the chain alone, and the
+    # chain with a checkpoints file the attacker cannot reach.
+    if name == "atmem-chain":
+        from agmi.adapters.atmem import AtMemChainAdapter
+        return AtMemChainAdapter()
+    if name == "atmem-chain+checkpoint":
+        from agmi.adapters.atmem import AtMemAnchoredAdapter
+        return AtMemAnchoredAdapter()
     raise SystemExit(
         f"unknown at-rest target {name!r}; choose one of: reference, "
         f"langgraph-sqlite, llamaindex, crewai, openai-agents, inspeximus-default, "
-        f"inspeximus-rcpt+dir, inspeximus-rcpt+dir+home, vertex-memory-bank")
+        f"inspeximus-rcpt+dir, inspeximus-rcpt+dir+home, vertex-memory-bank, "
+        f"atmem-chain, atmem-chain+checkpoint")

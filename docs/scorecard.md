@@ -26,6 +26,8 @@ Generated from the results file by `agmi.render`; do not edit by hand. Run of 20
 | atelya-attest-chain+anchor | audit | reported | reported | reported | reported | reported |
 | continuum-events | audit | reported | accepted | reported | reported | reported |
 | continuum-events+attest | audit | reported | reported | reported | reported | reported |
+| atmem-chain | audit | accepted | accepted | accepted | accepted | accepted |
+| atmem-chain+checkpoint | audit | accepted | accepted | accepted | accepted | accepted |
 | acrf-memory-guard | read | rejected | accepted | accepted | accepted | rejected |
 | agent-memory | read | rejected | rejected | rejected | rejected | rejected |
 
@@ -142,7 +144,7 @@ Measured on: langgraph-checkpoint-sqlite 3.1.1 SqliteStore with a vector index, 
 
 - `memory_injection`: surfaced. planted memory served as trusted fact (external: 5 of 5; laundered: 5 of 5; agent-laundered: 5 of 5).
 - `cross_session_bleed`: kept out. user boundary held (cross-user: kept out 5 of 5).
-- `retrieval_hijack`: surfaced. attacker entry took a slot from a genuine memory (external: 5 of 5, ranks 2, 3, 1, 2, 1 of 3; laundered: 4 of 5, ranks 2, out, 1, 2, 1 of 3; agent-laundered: 5 of 5, ranks 2, 3, 1, 2, 2 of 3).
+- `retrieval_hijack`: surfaced. attacker entry took a slot from a genuine memory (external: 5 of 5, ranks 2, 3, 1, 2, 1 of 3; laundered: 4 of 5, ranks 2, out, 1, 2, 1 of 3; agent-laundered: 4 of 5, ranks 2, out, 1, 2, 1 of 3).
 - `indirect_prompt_injection`: surfaced. instruction-shaped content delivered into context (external: 5 of 5; laundered: 5 of 5; agent-laundered: 5 of 5).
 - `update_poisoning`: surfaced. attacker's correction served for the user's question (external: 5 of 5, alongside, alongside, alongside, alongside, alongside; laundered: 5 of 5, alongside, alongside, alongside, alongside, alongside; agent-laundered: 5 of 5, alongside, alongside, alongside, alongside, alongside).
 - `metadata_poisoning`: surfaced. self-tagged memory passed the trust filter (external: 5 of 5; laundered: 5 of 5; agent-laundered: 5 of 5).
@@ -211,26 +213,26 @@ Measured on: inspeximus 3.0.0, receipts off, recall defaults (lexical token over
 
 ### inspeximus-rcpt+dir
 
-- `tamper`: reported. detected on reload (verify_writes: ['memory 57959039fa: its TEXT or KEY no longer matches its write receipt (edited after write)']).
+- `tamper`: reported. detected on reload (verify_writes: ['memory 3e461935c4: its TEXT or KEY no longer matches its write receipt (edited after write)']).
 - `truncate`: reported. detected on reload (verify_writes: ['write log shrank below the head kept outside the store: 3 < 5 (rolled back or truncated, receipts included); a deliberate restore is accep).
 - `delete_middle`: reported. detected on reload (verify_writes: ['receipt 2: broken chain link (a prior receipt was altered/removed)', 'write log shrank below the head kept outside the store: 4 < 5 (rolle).
-- `reorder`: reported. detected on reload (verify_writes: ['memory 0f13eb2405: its TEXT or KEY; its VALUE (`object`); WHEN the fact became true (`valid_from`), or where that time came from no longer).
-- `forge`: reported. detected on reload (verify_writes: ["1 record(s) are covered by NO write receipt, so nothing here vouches for them: ['f0fecf4efe']. They were inserted out of band, or written ).
+- `reorder`: reported. detected on reload (verify_writes: ['memory 7906879dbf: its TEXT or KEY; its VALUE (`object`); WHEN the fact became true (`valid_from`), or where that time came from no longer).
+- `forge`: reported. detected on reload (verify_writes: ["1 record(s) are covered by NO write receipt, so nothing here vouches for them: ['f0b4588040']. They were inserted out of band, or written ).
 - `cross_replay`: error. edit did not land: seeding the second context changed the first context's records.
-- `rollback_replay`: reported. detected on reload (verify_writes: ['memory 10677daee2: its TEXT or KEY; its VALUE (`object`); WHEN the fact became true (`valid_from`), or where that time came from no longer).
-- `metadata_tamper`: reported. detected on reload (verify_writes: ['memory 073965583d: a field its receipt commits to no longer matches its write receipt (edited after write)']).
+- `rollback_replay`: reported. detected on reload (verify_writes: ['memory f8391c59d6: its TEXT or KEY; its VALUE (`object`); WHEN the fact became true (`valid_from`), or where that time came from no longer).
+- `metadata_tamper`: reported. detected on reload (verify_writes: ['memory abbbfb7ddb: a field its receipt commits to no longer matches its write receipt (edited after write)']).
 - `snapshot_rollback`: reported. the store noticed it was older than its last committed state (verify_writes: ['write log shrank below the head kept outside the store: 5 < 6 (rolled back or truncated, receipts included); a deliberate restore is accep).
 
 ### inspeximus-rcpt+dir+home
 
-- `tamper`: reported. detected on reload (verify_writes: ['memory de09c7d769: its TEXT or KEY no longer matches its write receipt (edited after write)']).
+- `tamper`: reported. detected on reload (verify_writes: ['memory fad1e9bac2: its TEXT or KEY no longer matches its write receipt (edited after write)']).
 - `truncate`: accepted. accepted silently.
 - `delete_middle`: reported. detected on reload (verify_writes: ['receipt 2: broken chain link (a prior receipt was altered/removed)']).
-- `reorder`: reported. detected on reload (verify_writes: ['memory 0456d255be: its TEXT or KEY; its VALUE (`object`); WHEN the fact became true (`valid_from`), or where that time came from no longer).
-- `forge`: reported. detected on reload (verify_writes: ["1 record(s) are covered by NO write receipt, so nothing here vouches for them: ['f024d505f5']. They were inserted out of band, or written ).
+- `reorder`: reported. detected on reload (verify_writes: ['memory c61795572d: its TEXT or KEY; its VALUE (`object`); WHEN the fact became true (`valid_from`), or where that time came from no longer).
+- `forge`: reported. detected on reload (verify_writes: ["1 record(s) are covered by NO write receipt, so nothing here vouches for them: ['f0c2b68318']. They were inserted out of band, or written ).
 - `cross_replay`: error. edit did not land: seeding the second context changed the first context's records.
-- `rollback_replay`: reported. detected on reload (verify_writes: ['memory 7e7a744720: its TEXT or KEY; its VALUE (`object`); WHEN the fact became true (`valid_from`), or where that time came from no longer).
-- `metadata_tamper`: reported. detected on reload (verify_writes: ['memory 7cc5a2c7e1: a field its receipt commits to no longer matches its write receipt (edited after write)']).
+- `rollback_replay`: reported. detected on reload (verify_writes: ['memory 3555a7d470: its TEXT or KEY; its VALUE (`object`); WHEN the fact became true (`valid_from`), or where that time came from no longer).
+- `metadata_tamper`: reported. detected on reload (verify_writes: ['memory 300ec458a8: a field its receipt commits to no longer matches its write receipt (edited after write)']).
 - `snapshot_rollback`: accepted. the older copy opened as current; the newest genuine record is gone without an error.
 
 ### inspeximus-defended
@@ -257,38 +259,38 @@ Measured on: inspeximus 3.0.0, receipts off, recall defaults (lexical token over
 
 ### langgraph-ledger
 
-- `tamper`: reported. detected on reload (verify_thread: checkpoint content drifted: 1f1c21be-d60d-6a7e-8002-200d71930de0).
-- `truncate`: reported. detected on reload (verify_thread: checkpoint missing from saver: 1f1c21be-d64b-6ebe-8003-323c87701a62; checkpoint missing from saver: 1f1c21be-d64c-6b84-8004-f19cbb35c742).
-- `delete_middle`: reported. detected on reload (verify_thread: checkpoint missing from saver: 1f1c21be-d667-6d30-8002-b0c4c46ffb78).
-- `reorder`: reported. detected on reload (verify_thread: checkpoint content drifted: 1f1c21be-d686-68ca-8001-f7d76fea1af3; checkpoint content drifted: 1f1c21be-d687-6716-8002-846760dc3195).
+- `tamper`: reported. detected on reload (verify_thread: checkpoint content drifted: 1f1c23b9-e15c-69d2-8002-c786f7d1f54f).
+- `truncate`: reported. detected on reload (verify_thread: checkpoint missing from saver: 1f1c23b9-e16c-63b4-8003-943a8325e1f2; checkpoint missing from saver: 1f1c23b9-e16c-6cba-8004-f80a6c03c586).
+- `delete_middle`: reported. detected on reload (verify_thread: checkpoint missing from saver: 1f1c23b9-e17b-6be8-8002-edf1853d7942).
+- `reorder`: reported. detected on reload (verify_thread: checkpoint content drifted: 1f1c23b9-e189-66d0-8001-20773f2c35ca; checkpoint content drifted: 1f1c23b9-e18a-6044-8002-8d9d8d25fe9b).
 - `forge`: accepted. accepted silently.
-- `cross_replay`: reported. detected on reload (verify_thread: checkpoint content drifted: 1f1c21be-d6e8-6476-8004-cf28e3e0d4bf).
-- `rollback_replay`: reported. detected on reload (verify_thread: checkpoint content drifted: 1f1c21be-d6fb-67e2-8004-5fee263f7367).
+- `cross_replay`: reported. detected on reload (verify_thread: checkpoint content drifted: 1f1c23b9-e1ab-629e-8004-7de9ca172094).
+- `rollback_replay`: reported. detected on reload (verify_thread: checkpoint content drifted: 1f1c23b9-e1bf-6046-8004-0cc1de5e8cfe).
 - `metadata_tamper`: accepted. accepted silently.
-- `snapshot_rollback`: reported. the store noticed it was older than its last committed state (verify_thread: checkpoint missing from saver: 1f1c21be-d71f-614c-8063-7becb6ae1a12).
+- `snapshot_rollback`: reported. the store noticed it was older than its last committed state (verify_thread: checkpoint missing from saver: 1f1c23b9-e1e5-6c8c-8063-3e04ed426e8c).
 
 ### memory-blackbox-md
 
-- `tamper`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `truncate`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `delete_middle`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `reorder`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `forge`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `cross_replay`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `rollback_replay`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `metadata_tamper`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `snapshot_rollback`: reported. the store noticed it was older than its last committed state (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
+- `tamper`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `truncate`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `delete_middle`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `reorder`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `forge`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `cross_replay`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `rollback_replay`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `metadata_tamper`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `snapshot_rollback`: reported. the store noticed it was older than its last committed state (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
 
 ### memory-blackbox-md+restart
 
-- `tamper`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `truncate`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `delete_middle`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `reorder`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `forge`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `cross_replay`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `rollback_replay`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
-- `metadata_tamper`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a11524)).
+- `tamper`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `truncate`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `delete_middle`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `reorder`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `forge`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `cross_replay`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `rollback_replay`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
+- `metadata_tamper`: reported. detected on reload (scan recorded an out-of-band write to MEMORY.md (record 01a115f3)).
 - `snapshot_rollback`: accepted. the older copy opened as current; the newest genuine record is gone without an error.
 
 ### atelya-attest-chain
@@ -317,27 +319,51 @@ Measured on: inspeximus 3.0.0, receipts off, recall defaults (lexical token over
 
 ### continuum-events
 
-- `tamper`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=3 event_id='event_fb9cb64b39c934bb69355c20c3a7a28d' detail='stored hash does not match recomputed digest').
+- `tamper`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=3 event_id='event_b4e958570eb3732ae1b8f6323264ffd8' detail='stored hash does not match recomputed digest').
 - `truncate`: accepted. accepted silently.
-- `delete_middle`: reported. detected on reload (verify_events: kind='SEQUENCE_GAP' run_id='agmi-run-A' sequence=4 event_id='event_21d3181beaa540ee1d1ddfdeb825ea66' detail='expected sequence 3').
-- `reorder`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=2 event_id='event_582fc3b265eb96babb56a631e0360d46' detail='stored hash does not match recomputed digest').
+- `delete_middle`: reported. detected on reload (verify_events: kind='SEQUENCE_GAP' run_id='agmi-run-A' sequence=4 event_id='event_e0017f1da642b10a11e63bbc7d354a5c' detail='expected sequence 3').
+- `reorder`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=2 event_id='event_e1fec5e7488c3be4990e314ea817de54' detail='stored hash does not match recomputed digest').
 - `forge`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=6 event_id='event_agmiforged000000000000000000' detail='stored hash does not match recomputed digest').
-- `cross_replay`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=5 event_id='event_d4ebd16bf40c54be800235f9445248a6' detail='stored hash does not match recomputed digest').
-- `rollback_replay`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=5 event_id='event_d1f303ecc66d52f174a346e279967185' detail='stored hash does not match recomputed digest').
-- `metadata_tamper`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=3 event_id='event_ba2bf46255acf3fbfc97fb6d6c92ea17' detail='stored hash does not match recomputed digest').
+- `cross_replay`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=5 event_id='event_6894b0b1dacf335ea4eeebfc9c1ad293' detail='stored hash does not match recomputed digest').
+- `rollback_replay`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=5 event_id='event_3b9d412adfbceba677c4ec6cc63b6147' detail='stored hash does not match recomputed digest').
+- `metadata_tamper`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=3 event_id='event_d3140f0838c9afb79c95f53cbe0e2064' detail='stored hash does not match recomputed digest').
 - `snapshot_rollback`: accepted. the older copy opened as current; the newest genuine record is gone without an error.
 
 ### continuum-events+attest
 
-- `tamper`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=3 event_id='event_5443c2abea7086dcf2e7910fddf410b6' detail='stored hash does not match recomputed digest').
+- `tamper`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=3 event_id='event_00171796efd28f0729f5a9c16c8c6534' detail='stored hash does not match recomputed digest').
 - `truncate`: reported. detected on reload (attest-verify: ALTERED (signed seq 5, live seq 3)).
-- `delete_middle`: reported. detected on reload (verify_events: kind='SEQUENCE_GAP' run_id='agmi-run-A' sequence=4 event_id='event_697b63563d117bccb95a27cd0ef24c66' detail='expected sequence 3').
-- `reorder`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=2 event_id='event_ae17b1448523db89c3b375075786ddda' detail='stored hash does not match recomputed digest').
+- `delete_middle`: reported. detected on reload (verify_events: kind='SEQUENCE_GAP' run_id='agmi-run-A' sequence=4 event_id='event_5476ec70222ca08655ee99581b21d4e7' detail='expected sequence 3').
+- `reorder`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=2 event_id='event_89de0abf11e5e6e3a1af4bad6e13e598' detail='stored hash does not match recomputed digest').
 - `forge`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=6 event_id='event_agmiforged000000000000000000' detail='stored hash does not match recomputed digest').
-- `cross_replay`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=5 event_id='event_7019b259fbce6811622b8b9a1529a3db' detail='stored hash does not match recomputed digest').
-- `rollback_replay`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=5 event_id='event_8dde724204cbaee4bef6d030169e4f6e' detail='stored hash does not match recomputed digest').
-- `metadata_tamper`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=3 event_id='event_4d1128662b9106362813f34d26c4e8a0' detail='stored hash does not match recomputed digest').
+- `cross_replay`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=5 event_id='event_4f05149886cf0aa7fb85d03bd8748688' detail='stored hash does not match recomputed digest').
+- `rollback_replay`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=5 event_id='event_64c3abf1141ac91f9c58b8fdc121bcde' detail='stored hash does not match recomputed digest').
+- `metadata_tamper`: reported. detected on reload (verify_events: kind='TAMPERED_CONTENT' run_id='agmi-run-A' sequence=3 event_id='event_425d5a3b132760bc85f0637888ecd2bd' detail='stored hash does not match recomputed digest').
 - `snapshot_rollback`: reported. the store noticed it was older than its last committed state (attest-verify: ALTERED (signed seq 6, live seq 5)).
+
+### atmem-chain
+
+- `tamper`: accepted. accepted silently.
+- `truncate`: accepted. accepted silently.
+- `delete_middle`: accepted. accepted silently.
+- `reorder`: accepted. accepted silently.
+- `forge`: accepted. accepted silently.
+- `cross_replay`: accepted. accepted silently.
+- `rollback_replay`: accepted. accepted silently.
+- `metadata_tamper`: accepted. accepted silently.
+- `snapshot_rollback`: accepted. the older copy opened as current; the newest genuine record is gone without an error.
+
+### atmem-chain+checkpoint
+
+- `tamper`: accepted. accepted silently.
+- `truncate`: accepted. accepted silently.
+- `delete_middle`: accepted. accepted silently.
+- `reorder`: accepted. accepted silently.
+- `forge`: accepted. accepted silently.
+- `cross_replay`: accepted. accepted silently.
+- `rollback_replay`: accepted. accepted silently.
+- `metadata_tamper`: accepted. accepted silently.
+- `snapshot_rollback`: reported. the store noticed it was older than its last committed state (verify: pinned event at sequence 17 is missing (tail truncated?)).
 
 ### acrf-memory-guard
 
