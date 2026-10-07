@@ -360,8 +360,14 @@ class InspeximusRowsAdapter(MemoryAdapter):
         self._store = self._open()
 
     def append_genuine(self) -> None:
-        n = len(self.read_all_raw())
-        self._store.remember(f"{SEED_TOKEN}{n}: the limit is {50 + n}", key=f"fact::{n}")
+        # A genuine write must never collide with a seeded key. Deriving the key
+        # from the on-disk count is wrong when the store's open handle has more
+        # records in memory than the file (an attacker truncated the file under a
+        # live handle): the write would supersede a genuine record and make a
+        # harmless write look like served tampering. Use a counter instead.
+        self._genuine_writes = getattr(self, "_genuine_writes", 0) + 1
+        n = self._genuine_writes
+        self._store.remember(f"{SEED_TOKEN}g{n}: the limit is {500 + n}", key=f"fact::g{n}")
 
     def reload(self) -> None:
         self._store = self._open()

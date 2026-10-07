@@ -98,6 +98,20 @@ def at_rest_target(name: str) -> MemoryAdapter:
     if name == "openai-agents":
         from agmi.adapters.openai_agents_session import OpenAIAgentsSessionAdapter
         return OpenAIAgentsSessionAdapter()
+    # inspeximus in the three positions the scorecard measures: receipts off (the
+    # default, verify is the read path); receipts on with the attacker holding the
+    # store directory; and receipts on with the attacker also holding the config
+    # home where the chain head lives.
+    if name == "inspeximus-default":
+        from agmi.adapters.inspeximus_rows import InspeximusDefaultAdapter
+        return InspeximusDefaultAdapter()
+    if name == "inspeximus-rcpt+dir":
+        from agmi.adapters.inspeximus_rows import InspeximusRowsSidecarAdapter
+        return InspeximusRowsSidecarAdapter()
+    if name == "inspeximus-rcpt+dir+home":
+        from agmi.adapters.inspeximus_rows import InspeximusRowsSidecarHeadAdapter
+        return InspeximusRowsSidecarHeadAdapter()
     raise SystemExit(
         f"unknown at-rest target {name!r}; choose one of: reference, "
-        f"langgraph-sqlite, llamaindex, crewai, openai-agents")
+        f"langgraph-sqlite, llamaindex, crewai, openai-agents, inspeximus-default, "
+        f"inspeximus-rcpt+dir, inspeximus-rcpt+dir+home")
