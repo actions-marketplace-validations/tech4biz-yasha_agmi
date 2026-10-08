@@ -1,0 +1,1 @@
+Corpus: probityai/agent-evidence-vectors, vectors-anchored-chain, commit 74b8b983b9fde58316b88ad6447fec8894bd4347 (corpus digest in MANIFEST.json). Copied unchanged, with its licence, so tests/test_anchored_chain_vectors.py can run agmi/anchored_chain.py against it offline.

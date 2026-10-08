@@ -150,6 +150,13 @@ def full_scorecard() -> str:
     except ImportError:
         atelya_rows = []
     try:
+        import atmem  # noqa: F401
+        from agmi.adapters.atmem import AtMemAnchoredAdapter, AtMemChainAdapter
+        atmem_rows = [("atmem-chain", AtMemChainAdapter(), None),
+                      ("atmem-chain+checkpoint", AtMemAnchoredAdapter(), None)]
+    except ImportError:
+        atmem_rows = []
+    try:
         import langgraph.checkpoint.postgres  # noqa: F401
         from agmi.adapters.langgraph_postgres import LangGraphPostgresAdapter, postgres_uri
         if not postgres_uri():
@@ -248,6 +255,7 @@ def full_scorecard() -> str:
         *mbb_rows,
         *atelya_rows,
         *continuum_rows,
+        *atmem_rows,
         *([acrf_row] if acrf_row else []),
         *([agent_memory_row] if agent_memory_row else []),
         ("naive-mem(scoped)", None,
