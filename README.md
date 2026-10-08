@@ -120,6 +120,10 @@ For your own store, write an adapter against `agmi.adapters.base.MemoryAdapter` 
 
 Locally the same command is `agmi-check --adapter module:Class`. Exit 1 means at least one edit was ACCEPTED, exit 2 means nothing could be evaluated (the control cases failed), exit 3 means an edit did not land as intended (an adapter fault, fix it before reading any verdict), exit 0 means every edit was REJECTED or REPORTED. Add `--fail-on none` to record without failing, for example while a fix is in progress. Verdict words follow the method proposed for IETF draft-han-bmwg-agent-security-benchmark metric 5.4.7.
 
+### Test vectors
+
+`agmi/anchored_chain.py` is an independent verifier for the `anchored-record-chain/v1` corpus in [probityai/agent-evidence-vectors](https://github.com/probityai/agent-evidence-vectors), which applies T1 to T9 to a signed record chain whose head is anchored by a key the store does not hold. At commit 74b8b98 it reaches the expected decision and reason on all fourteen cases: the three that must verify (two controls and a tail removal after the last anchor, which no verifier can distinguish from an honest store) and the eleven that must be rejected, eight of which keep every record signature valid and are caught only by the chain links or the anchor; the cases are vendored under `tests/vectors/` and pinned by `tests/test_anchored_chain_vectors.py`. Run it against the corpus with `python -m agmi.anchored_chain <case-dir>/case.json --json`, or through the corpus's own checker with `--verifier "python -m agmi.anchored_chain"`.
+
 ### Who runs it
 
 - memory-blackbox (Lav Kumar Vishwakarma) runs the agmi Action in CI since 0.1.1, after fixing the restart gap this suite reported.
