@@ -31,19 +31,19 @@ EXPECTED = {
     InspeximusDefaultAdapter: {"tamper": False, "truncate": False, "delete_middle": False,
                                "reorder": False, "forge": False,
                                # receipts off: the read path checks nothing.
-                               # cross_replay is ERROR until the victim pool is
-                               # scoped to the first context (issue #5): the
-                               # landed guard refuses to score a no-op.
-                               "cross_replay": "ERROR", "rollback_replay": False,
+                               # cross_replay (issue #5): the victim pool is the first
+                               # context's own rows, so the edit lands and is accepted.
+                               "cross_replay": False, "rollback_replay": False,
                                "metadata_tamper": False},
     InspeximusRowsSidecarAdapter: {"tamper": True, "truncate": True, "delete_middle": True,
                                    "reorder": True, "forge": True,
-                                   # cross_replay: see the default row (issue #5).
-                                   "cross_replay": "ERROR", "rollback_replay": True,
+                                   # cross_replay: see the default row (issue #5). The edit
+                                   # lands on the victim's own row and the receipts report it.
+                                   "cross_replay": True, "rollback_replay": True,
                                    "metadata_tamper": True},
     InspeximusRowsSidecarHeadAdapter: {"tamper": True, "truncate": False, "delete_middle": True,
                                        "reorder": True, "forge": True,
-                                       "cross_replay": "ERROR", "rollback_replay": True,
+                                       "cross_replay": True, "rollback_replay": True,
                                        "metadata_tamper": True},
 }
 

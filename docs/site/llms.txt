@@ -1,7 +1,7 @@
 # Agent Memory Integrity (agmi)
 > A conformance test suite that measures whether AI agent memory and checkpoint stores notice when they are tampered with.
 
-Version 0.6.3, measured 2026-10-07. Source: https://github.com/tech4biz-yasha/agmi
+Version 0.6.3, measured 2026-10-08. Source: https://github.com/tech4biz-yasha/agmi
 Method text proposed for IETF draft-han-bmwg-agent-security-benchmark metric 5.4.7.
 
 ## At rest (nine storage-level edits, attacker has store access, no keys)
@@ -14,10 +14,10 @@ Method text proposed for IETF draft-han-bmwg-agent-security-benchmark metric 5.4
 - CrewAI long-term memory, LanceDB dataset (crewai 1.15.23): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
 - Vertex AI Agent Engine Memory Bank, managed store, edits through the data-plane API (google-cloud-aiplatform 2.4.0): T1 accepted, T2 accepted, T3 accepted, T4 n/a, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 n/a
 - Letta block checkpoint history (letta 0.16.8): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
-- Mem0 local Qdrant store (mem0ai 2.0.20): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 error, T7 accepted, T8 accepted, T9 accepted
-- inspeximus, receipts off (default) (inspeximus 3.0.0): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 error, T7 accepted, T8 accepted, T9 accepted
-- inspeximus, receipts on, attacker holds the store directory (inspeximus 3.0.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 error, T7 reported, T8 reported, T9 reported
-- inspeximus, receipts on, attacker also holds the config home (inspeximus 3.0.0): T1 reported, T2 accepted, T3 reported, T4 reported, T5 reported, T6 error, T7 reported, T8 reported, T9 accepted
+- Mem0 local Qdrant store (mem0ai 2.0.20): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
+- inspeximus, receipts off (default) (inspeximus 3.0.0): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
+- inspeximus, receipts on, attacker holds the store directory (inspeximus 3.0.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 reported
+- inspeximus, receipts on, attacker also holds the config home (inspeximus 3.0.0): T1 reported, T2 accepted, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 accepted
 - langgraph-ledger over SqliteSaver, hash-chained ledger, verify_thread audit (langgraph-ledger 0.3.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 accepted, T6 reported, T7 reported, T8 accepted, T9 reported
 - memory-blackbox memory.md watcher, agent process alive, scan audit (memory-blackbox 0.1.1): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 reported
 - memory-blackbox memory.md watcher, agent restarted before the scan, scan audit (memory-blackbox 0.1.1): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 accepted

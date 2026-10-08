@@ -22,14 +22,9 @@ MEASURED_ON = "mem0ai 2.0.20"
 def test_mem0_accepts_every_at_rest_tamper():
     # All eight at-rest edits, including T6/T7/T8, are ACCEPTED here: this
     # store has no integrity check on its records. That is the finding the
-    # row records.
+    # row records. T6 lands on the seeded user's own point (issue #5).
     for cls in ALL_AT_REST_ATTACKS:
         r = cls().run(Mem0AtRestAdapter())
-        if r.attack == "cross_replay":
-            # ERROR until the victim pool is scoped to the seeded user
-            # (issue #5): the landed guard refuses to score a no-op.
-            assert r.status == "ERROR", f"cross_replay: {r.status} {r.guard}"
-            continue
         assert r.error is None, f"{r.attack} errored: {r.error}"
         assert r.guard is None, f"{r.attack} did not land: {r.guard}"
         assert not r.detected, (

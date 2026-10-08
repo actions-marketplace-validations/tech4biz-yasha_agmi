@@ -130,8 +130,12 @@ class InspeximusRowsAdapter(MemoryAdapter):
             rows = conn.execute("SELECT id, ord, doc FROM records ORDER BY ord ASC").fetchall()
         finally:
             conn.close()
-        return [Record(seq=i, fields={"id": rid, "ord": ordv, "doc": json.loads(doc)})
-                for i, (rid, ordv, doc) in enumerate(rows)]
+        # The first context only, as the reference store reads CTX: after seed_other() the last row
+        # of the whole store is ctx-B's, so T6 picked the donor as its own victim.
+        docs = [(rid, ordv, json.loads(doc)) for rid, ordv, doc in rows]
+        docs = [d for d in docs if (d[2].get("meta") or {}).get("uid") != "ctx-B"]
+        return [Record(seq=i, fields={"id": rid, "ord": ordv, "doc": doc})
+                for i, (rid, ordv, doc) in enumerate(docs)]
 
     def _row_at(self, seq: int):
         recs = self.read_all_raw()
