@@ -11,6 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: tech4biz-yasha/agmi@76ddf21
+      - uses: tech4biz-yasha/agmi@76ddf21af25ce35e427e5614afb70d1fe96e32a2
         with:
           adapter: agmi.adapters.reference_atrest:ReferenceAtRestAdapter
