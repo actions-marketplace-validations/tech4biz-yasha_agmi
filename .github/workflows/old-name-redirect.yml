@@ -1,0 +1,16 @@
+# Proves that workflows pinned to the old repository name keep working after
+# the rename to agent-memory-integrity: this job calls the action exactly the
+# way an outside adopter pinned it, by the old name and a commit id.
+name: old-name-redirect
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  old-name-pin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: tech4biz-yasha/agmi@76ddf21
+        with:
+          adapter: agmi.adapters.reference_atrest:ReferenceAtRestAdapter
