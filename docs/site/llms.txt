@@ -25,8 +25,8 @@ Method text proposed for IETF draft-han-bmwg-agent-security-benchmark metric 5.4
 - Atelya Attest, keyed hash chain plus anchored head, verify and consistency audit (atelya-attest 0.1.1): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 reported
 - CONTINUUM event log, hash chain, verify_events audit (continuum-agent 0.1.0): T1 reported, T2 accepted, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 accepted
 - CONTINUUM event log, hash chain plus Ed25519-signed head, attest-verify audit (continuum-agent 0.1.0): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 reported
-- AtMem 2.3.7, audit chain alone, verify() audit (atmem 2.3.7): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 accepted
-- AtMem 2.3.7, audit chain with an external checkpoint outside the attacker-controlled store directory, verify() audit (atmem 2.3.7): T1 accepted, T2 accepted, T3 accepted, T4 accepted, T5 accepted, T6 accepted, T7 accepted, T8 accepted, T9 reported
+- AtMem 2.3.8, audit chain alone, verify() audit (atmem 2.3.8): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 accepted
+- AtMem 2.3.8, audit chain with an external checkpoint outside the attacker-controlled store directory, verify() audit (atmem 2.3.8): T1 reported, T2 reported, T3 reported, T4 reported, T5 reported, T6 reported, T7 reported, T8 reported, T9 reported
 - acrf-memory-guard, per-entry HMAC over a JSON store (acrf-memory-guard 0.1.0): T1 rejected, T2 accepted, T3 accepted, T4 accepted, T5 rejected, T6 accepted, T7 accepted, T8 rejected, T9 accepted
 - Agent Memory reference runtime, SQLite canonical substrate, bucketed row digests, fail-closed open (agent-memory-reference 0.2.0 (f2aef57)): T1 rejected, T2 rejected, T3 rejected, T4 rejected, T5 rejected, T6 rejected, T7 rejected, T8 rejected, T9 accepted
 

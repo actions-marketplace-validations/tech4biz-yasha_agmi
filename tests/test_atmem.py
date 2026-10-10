@@ -1,10 +1,11 @@
 # agmi: Agent Memory Integrity test suite
 # Copyright (c) 2026 Yasha Khandelwal <yasha.khandelwal@tech4biz.io>
 # SPDX-License-Identifier: MIT
-"""Pins the proposed AtMem 2.3.8 at-rest remeasurement.
+"""Pins the AtMem 2.3.8 at-rest measurement.
 
-These expectations were submitted by the AtMem maintainer and remain subject to
-AGMI's independent reproduction before the published scorecard is updated.
+These expectations were submitted by the AtMem maintainer in PR #7 and
+reproduced independently by AGMI from the published PyPI wheel on Linux
+and macOS before the scorecard was updated.
 """
 
 import importlib.metadata as md
