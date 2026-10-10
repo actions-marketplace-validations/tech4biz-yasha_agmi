@@ -2007,47 +2007,47 @@
     {
       "label": "atmem-chain",
       "checked_at": "audit",
-      "measured_on": null,
+      "measured_on": "atmem 2.3.8 from PyPI (wheel SHA-256 05ca2c57), remeasured 2026-10-10 on Darwin arm64 and Linux x86_64, Python 3.12",
       "cells": {
         "tamper": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "truncate": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record committed by the audit chain is missing)"
         },
         "delete_middle": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record committed by the audit chain is missing)"
         },
         "reorder": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "forge": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record has no creation event in the audit chain)"
         },
         "cross_replay": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "rollback_replay": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "metadata_tamper": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "snapshot_rollback": {
           "status": "VULNERABLE",
@@ -2089,47 +2089,47 @@
     {
       "label": "atmem-chain+checkpoint",
       "checked_at": "audit",
-      "measured_on": null,
+      "measured_on": "atmem 2.3.8 from PyPI (wheel SHA-256 05ca2c57), remeasured 2026-10-10 on Darwin arm64 and Linux x86_64, Python 3.12",
       "cells": {
         "tamper": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "truncate": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record committed by the audit chain is missing)"
         },
         "delete_middle": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record committed by the audit chain is missing)"
         },
         "reorder": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "forge": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record has no creation event in the audit chain)"
         },
         "cross_replay": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "rollback_replay": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "metadata_tamper": {
-          "status": "VULNERABLE",
-          "verdict": "accepted",
-          "detail": "accepted silently"
+          "status": "reported",
+          "verdict": "reported",
+          "detail": "detected on reload (verify: record row does not match its chained integrity commitment)"
         },
         "snapshot_rollback": {
           "status": "reported",

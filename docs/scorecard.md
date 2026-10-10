@@ -26,8 +26,8 @@ Generated from the results file by `agmi.render`; do not edit by hand. Run of 20
 | atelya-attest-chain+anchor | audit | reported | reported | reported | reported | reported |
 | continuum-events | audit | reported | accepted | reported | reported | reported |
 | continuum-events+attest | audit | reported | reported | reported | reported | reported |
-| atmem-chain | audit | accepted | accepted | accepted | accepted | accepted |
-| atmem-chain+checkpoint | audit | accepted | accepted | accepted | accepted | accepted |
+| atmem-chain | audit | reported | reported | reported | reported | reported |
+| atmem-chain+checkpoint | audit | reported | reported | reported | reported | reported |
 | acrf-memory-guard | read | rejected | accepted | accepted | accepted | rejected |
 | agent-memory | read | rejected | rejected | rejected | rejected | rejected |
 
@@ -343,26 +343,30 @@ Measured on: inspeximus 3.0.0, receipts off, recall defaults (lexical token over
 
 ### atmem-chain
 
-- `tamper`: accepted. accepted silently.
-- `truncate`: accepted. accepted silently.
-- `delete_middle`: accepted. accepted silently.
-- `reorder`: accepted. accepted silently.
-- `forge`: accepted. accepted silently.
-- `cross_replay`: accepted. accepted silently.
-- `rollback_replay`: accepted. accepted silently.
-- `metadata_tamper`: accepted. accepted silently.
+Measured on: atmem 2.3.8 from PyPI (wheel SHA-256 05ca2c57), remeasured 2026-10-10 on Darwin arm64 and Linux x86_64, Python 3.12
+
+- `tamper`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
+- `truncate`: reported. detected on reload (verify: record committed by the audit chain is missing).
+- `delete_middle`: reported. detected on reload (verify: record committed by the audit chain is missing).
+- `reorder`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
+- `forge`: reported. detected on reload (verify: record has no creation event in the audit chain).
+- `cross_replay`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
+- `rollback_replay`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
+- `metadata_tamper`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
 - `snapshot_rollback`: accepted. the older copy opened as current; the newest genuine record is gone without an error.
 
 ### atmem-chain+checkpoint
 
-- `tamper`: accepted. accepted silently.
-- `truncate`: accepted. accepted silently.
-- `delete_middle`: accepted. accepted silently.
-- `reorder`: accepted. accepted silently.
-- `forge`: accepted. accepted silently.
-- `cross_replay`: accepted. accepted silently.
-- `rollback_replay`: accepted. accepted silently.
-- `metadata_tamper`: accepted. accepted silently.
+Measured on: atmem 2.3.8 from PyPI (wheel SHA-256 05ca2c57), remeasured 2026-10-10 on Darwin arm64 and Linux x86_64, Python 3.12
+
+- `tamper`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
+- `truncate`: reported. detected on reload (verify: record committed by the audit chain is missing).
+- `delete_middle`: reported. detected on reload (verify: record committed by the audit chain is missing).
+- `reorder`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
+- `forge`: reported. detected on reload (verify: record has no creation event in the audit chain).
+- `cross_replay`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
+- `rollback_replay`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
+- `metadata_tamper`: reported. detected on reload (verify: record row does not match its chained integrity commitment).
 - `snapshot_rollback`: reported. the store noticed it was older than its last committed state (verify: pinned event at sequence 17 is missing (tail truncated?)).
 
 ### acrf-memory-guard

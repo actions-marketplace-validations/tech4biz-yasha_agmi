@@ -45,3 +45,15 @@ genuine state.
 
 Any difference from the submitted result should remain visible in the PR and
 be treated as the independent result.
+
+## Independent reproduction (10 October 2026)
+
+Reproduced by the AGMI maintainer from the published PyPI wheel on Linux
+(x86_64, Python 3.12.3) and macOS (arm64, Python 3.12): `tests/test_atmem.py`
+7 passed on both, and the full runner gives the submitted result for both
+rows. The PyPI wheel's SHA-256 is
+`05ca2c579be1af55de1da056ae257062417831b2e8eb4f2fda2a6413ba3ee923`, not the
+candidate above; its `atmem` package is identical to the v2.3.8 tag, and
+against `fdc63de` the only difference is a comment and one version string
+in `atmem/control/compat.py`. The public rows, README, changelog and site
+were updated from this reproduction.
